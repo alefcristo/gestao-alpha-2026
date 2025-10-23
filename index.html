@@ -40,9 +40,6 @@
     .summary .box { background: #111; padding: 14px; border-radius: 8px; color: #fff; margin-bottom: 10px; }
     .summary h4 { margin: 0; font-size: 0.8rem; text-transform: uppercase; color: #ccc; }
     .summary .big { font-size: 1.3rem; margin-top: 5px; }
-    .list-item { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px dashed rgba(255,255,255,0.1); }
-    .list-item div:first-child { color: #fff; font-weight: 600; }
-    .list-item div:last-child { font-weight: 700; }
     footer { background: #000; padding: 10px; text-align: center; color: #888; font-size: 0.85rem; border-top: 1px solid var(--border); }
   </style>
 </head>
@@ -138,7 +135,6 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxhhZrbBx0ZKaXZZn_SgoTRXcy5HVqi0Teh2oEE0DLZSOZFeJqeFvA1cHIw1TiG_bV_/exec";
 
-    // --- CÓDIGO ORIGINAL ---
     const KEY_T='gestao_trans', KEY_F='gestao_fixos', KEY_C='gestao_clientes';
     let transacoes = JSON.parse(localStorage.getItem(KEY_T)||'[]');
     let fixos = JSON.parse(localStorage.getItem(KEY_F)||'[]');
@@ -146,9 +142,12 @@
     const el=id=>document.getElementById(id);
     const format=v=>'R$ '+Number(v||0).toFixed(2).replace('.',',');
 
-    function salvar(){ localStorage.setItem(KEY_T,JSON.stringify(transacoes)); localStorage.setItem(KEY_F,JSON.stringify(fixos)); localStorage.setItem(KEY_C,JSON.stringify(clientes)); }
+    function salvar(){ 
+      localStorage.setItem(KEY_T,JSON.stringify(transacoes)); 
+      localStorage.setItem(KEY_F,JSON.stringify(fixos)); 
+      localStorage.setItem(KEY_C,JSON.stringify(clientes)); 
+    }
 
-    // --- FUNÇÕES NOVAS: ENVIAR E CARREGAR DO GOOGLE SHEETS ---
     async function salvarTransacaoNuvem(dados){
       try {
         await fetch(API_URL, {
@@ -173,7 +172,6 @@
       try {
         const resp = await fetch(API_URL);
         const data = await resp.json();
-        // converte para o formato usado localmente
         transacoes = data.map(t => ({
           id: Date.now() + Math.random(),
           cliente: t.Cliente || t.cliente,
@@ -191,7 +189,6 @@
       }
     }
 
-    // --- AJUSTES NAS FUNÇÕES ORIGINAIS ---
     async function addTrans(){
       const cliente=el('cliente').value.trim();
       const resp=el('responsavel').value;
@@ -205,18 +202,56 @@
       transacoes.push(nova);
       if(!clientes.includes(cliente)) clientes.push(cliente);
       salvar(); render();
-      salvarTransacaoNuvem(nova); // envia para o Google Sheets
+      salvarTransacaoNuvem(nova); // Envia para o Google Sheets
       el('cliente').value=''; el('descricao').value=''; el('valor').value='';
     }
 
-    // --- RESTANTE DO CÓDIGO ORIGINAL ---
-    function render(){ /* ... mantém seu render original ... */ }
+    function render(){
+      const tbody=el('tabelaTransacoes');
+      if(!transacoes.length){
+        tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma transação</td></tr>';
+      }
+      else{
+        tbody.innerHTML=transacoes.map(t=>`
+          <tr>
+            <td>${t.cliente}</td><td>${t.resp}</td><td>${new Date(t.data).toLocaleDateString('pt-BR')}</td>
+            <td>${t.cat}</td>
+            <td>${t.tipo==='receita'?'<span class="valor-receita">Receita</span>':'<span class="valor-despesa">Despesa</span>'}</td>
+            <td style="text-align:right">${t.tipo==='receita'?'<span class="valor-receita">'+format(t.val)+'</span>':'<span class="valor-despesa">'+format(t.val)+'</span>'}</td>
+            <td><button onclick="removeTrans(${t.id})">X</button></td>
+          </tr>`).join('');
+      }
 
-    // Inicialização
+      el('listaFixos').innerHTML = fixos.length ? fixos.map(f=>`<div>${f.nome} — ${format(f.val)} <button onclick="removeFixo(${f.id})">X</button></div>`).join('') : '<div class="empty">Nenhum custo fixo</div>';
+
+      const totalR=transacoes.filter(t=>t.tipo==='receita').reduce((a,b)=>a+b.val,0);
+      const totalD=transacoes.filter(t=>t.tipo==='despesa').reduce((a,b)=>a+b.val,0);
+      const totalF=fixos.reduce((a,b)=>a+b.val,0);
+      const saldo=totalR-totalD-totalF;
+      el('totalReceitas').textContent=format(totalR);
+      el('totalDespesas').textContent=format(totalD);
+      el('totalFixos').textContent=format(totalF);
+      el('saldoLiquido').textContent=format(saldo);
+      el('saldoLiquido').className=saldo>=0?'big saldo-pos':'big saldo-neg';
+
+      const mapaClientes={};
+      transacoes.filter(t=>t.tipo==='receita').forEach(t=>mapaClientes[t.cliente]=(mapaClientes[t.cliente]||0)+t.val);
+      const rc=el('receitasPorCliente');
+      rc.innerHTML = Object.keys(mapaClientes).length ? Object.entries(mapaClientes).map(([c,v])=>`<div class="list-item"><div>${c}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
+
+      const mapaServ={};
+      transacoes.filter(t=>t.tipo==='receita').forEach(t=>mapaServ[t.cat]=(mapaServ[t.cat]||0)+t.val);
+      const rs=el('receitasPorServico');
+      rs.innerHTML = Object.keys(mapaServ).length ? Object.entries(mapaServ).map(([s,v])=>`<div class="list-item"><div>${s}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
+    }
+
+    // Inicializa
     window.addEventListener("load", () => {
-      carregarTransacoesNuvem(); // carrega da nuvem automaticamente
+      carregarTransacoesNuvem(); // Carrega os dados do Google Sheets
       render();
     });
+
+    el('btnAdd').onclick=addTrans;
   </script>
 </body>
 </html>
