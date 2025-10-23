@@ -29,7 +29,8 @@
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; justify-content: space-between; }
     button { cursor: pointer; border-radius: 8px; padding: 10px 14px; font-weight: 700; border: none; }
     #btnAdd { background: #000; color: #fff; }
-    #btnLimparTudo, #btnExport { background: #fff; color: #000; }
+    #btnLimparTudo { background: #fff; color: #000; }
+    #btnExport { background: #fff; color: #000; }
     .valor-receita { color: var(--receita); font-weight: 800; }
     .valor-despesa { color: var(--despesa); font-weight: 800; }
     .saldo-pos { color: var(--receita); font-weight: 900; }
@@ -135,40 +136,16 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxhhZrbBx0ZKaXZZn_SgoTRXcy5HVqi0Teh2oEE0DLZSOZFeJqeFvA1cHIw1TiG_bV_/exec";
 
-    const KEY_T='gestao_trans', KEY_F='gestao_fixos', KEY_C='gestao_clientes';
-    let transacoes = JSON.parse(localStorage.getItem(KEY_T)||'[]');
-    let fixos = JSON.parse(localStorage.getItem(KEY_F)||'[]');
-    let clientes = JSON.parse(localStorage.getItem(KEY_C)||'[]');
-    const el=id=>document.getElementById(id);
-    const format=v=>'R$ '+Number(v||0).toFixed(2).replace('.',',');
+    // --- Declaração das variáveis ---
+    const KEY_T = 'gestao_trans', KEY_F = 'gestao_fixos', KEY_C = 'gestao_clientes';
+    let transacoes = JSON.parse(localStorage.getItem(KEY_T) || '[]');
+    let fixos = JSON.parse(localStorage.getItem(KEY_F) || '[]');
+    let clientes = JSON.parse(localStorage.getItem(KEY_C) || '[]');
+    
+    const nomesEmbutidos = ["ADEILSON CL", "ANDRE Cl - Ferro Velho", "Absolute.perfumaria", "Adeilma", "Ademir", "Admirador", "Adri Cl", "Adriano Cl", "Adriel", "Adriele Cl", "Adriely OMENA CL", "Agapito CL", "Ageu Cl Pai De Aninha", "Agnaldo Cl", "Aldeni Cl", "Alessandro CL", "Alex Cl", "Aliane", "Aliane Barros Cl", "Aline", "Aloizio Cl", "Amelia CL", "Ana Cl", "Ana Paula Cl", "Andre Cl", "Andressa CL", "Andreza Lima Cl", "André Lima Cl", "Andréia Cl", "Ane", "Anny", "Antônio Cl", "Ari Da Prestação", "Arnaldo Cl", "Barbearia SFCLUB", "Barbearia STYLUS", "Beto e Bethe 🐟e🦂❤️😍", "Bianca Cl", "Brisanet - DANIEL", "Bruna", "CARLOS CL", "CARLOS JOSE CL", "CONFEITEIRA LILY", "Carla Cl", "Carlos Lima Cl", "Cassiel Cl", "Cauany Cl", "Chaveiro", "Chaveiro 2", "Cicera Prima De Pai", "Cicinha Cl", "Cida Cl", "Cileide", "Cilene Cl", "Cintia Cl", "Cl", "Cl A", "Cl B", "Cl Nova", "Cl Sem Nome", "Cladeilton Cl", "Cleciane Cl", "Cleide Cl", "Cleo Deus E Fiel", "Confeiteira Mylena BTN 3", "Confeiteira Raiane", "Creusa", "Cristiane Cl", "Cássio Cl", "Cícero Cl", "Cícero Crispim Cl", "Daiane", "Daniel", "Daniela CL", "Dayenne Stella", "Deivid Cl", "Denize", "Deubania", "Diogenes", "Duda Cl", "EDILENE Cl", "EDMILSON - LEVE ME ACESSORIOS", "EDSON CL", "EMILY CL", "EVELIN CL", "Edileide Cl", "Edilma Cl Esposa De Fabricio", "Edilson Cl", "Edjan Cl", "Edjania Barbosa", "Edna Cl", "Ednalva Cl", "Ednalvo", "Eduarda Cl", "Elaine CL", "Elayne", "Eliane Cl", "Elias", "Elias Pereira Cl", "Elielsa Cl", "Elierveson Cl", "Elânia Cl", "Emanuel", "Emanuela Cl", "Emerson Cl", "Eric", "Erick Cl", "Erika Cl", "Erivaldo Cl", "Esaposa de Welinton Primo", "Esequias Cl", "Everaldo Cl", "Everton", "Ezequiel Cl", "FABIO", "Fabiana Cl", "Fabiane CL", "Fabiuane", "Felipe Cl", "Fernanda Lisboa", "Fernando Cl", "Fernando Landim Cl", "Filtros da Ilha 🏝️", "Francisco Cl", "Fábio Cl", "Gabriel Cl", "Gean Cl", "Geovan Cl", "Gerônimo Cl", "Gil Cl - Esposo LIVIA", "Girleide Cl", "Gislaine Pires Cl", "Graziela Cl", "Graziely", "Grazy Cl", "Guilherme Cl", "Gustavo", "Gustavo CL", "Helena", "Henrique Cl", "Hercules Cl", "Igor Cl", "Iracema", "Irailda CL", "Iraldo", "Irene", "Irma CILEIDE CL", "Isa Cl", "Ivete", "Ivonice CL", "JARDA", "Jaciete Cl", "Jadlog PA - Transportadora", "Jadna CL", "Jadson", "Jailma Cl", "Jailson CL", "Jailson Santos Cl", "Jaime Cl Faturas VIVO", "Jalison", "Jamilke", "Jana Personalizados", "Janaina Cl", "Janiele Cl", "Jaqueline Cl", "Jeane Cl", "Jeane Cl - EMPORIO DAS PLANTAS", "Jefferson Cl", "Jeine", "Jennyfer Cl", "Jessica Teixeira Cl", "Jessika CL", "Jhonny Cl", "Jirleide Cl", "Joao", "Jose", "Jose De Assis Cl", "Joselma Sales Cl", "Josenilton Cl", "Josiane Cl", "Josineide CL", "Josy ❤️", "José", "José Cl", "João", "João Batista CL", "João Brito Cl", "João Cl", "João Suzart Junior", "Julia - Cl", "Julio CL", "Junior", "Jurandir", "Juscelia Silva Cl", "Juvenildo Cl", "Juzinou Cl", "Jéssica", "Jéssica Cl Funcionaria MT SOLAR", "Jéssica Confeiteira", "Júlia Matos Cl", "Karolayne Silva Souza Cl", "Kelle Cl", "Kátia", "LEYDE CL", "LUCINHA CHAGAS CL", "Larissa", "Larissa Cl", "Larissa Gomes Cl", "Laudice Cl", "Lay Cl", "Layon Cl", "Leandro", "Leda", "Leeh", "Leno Esposo De VANIA CL", "Lenon Brito Cl", "Leonardo Cl", "Leyde", "Lia Cl", "Lindoercio Cl", "Lisa VictóriaCL", "Lourdes", "Lourdes Cl", "Luana", "Lucas Cl", "Lucia Cl", "Lucilene Cl", "Lucrécia Cl", "Lucy Cl", "Luis Cl", "Lume Jóias", "Lunna Cl", "Lurdes", "Luzia Cl", "MARCIA CL", "MATEUS Cl", "Manoel Cl - Esposo Aires", "Manoel Do SERASA CL", "Marcela Brunely Cl", "Marcio UBER - INDRIVE", "Marco", "Marcondes CL", "Marcos Cl", "Maria", "Maria CL parente De Pai", "Maria Cely - CL", "Maria Cl", "Maria De Fátima CL", "Maria José Cl", "Maria Sioneide Cl", "Mariane", "Marielly", "Marineide", "Mary", "Mary Omena Cl", "Matheus Cl", "Mayko Cl", "Mercia Cl", "Meure Cl", "Micael omena Cl", "Milena Confeiteira Btn 2", "Milly Cl", "Moises", "Márcio CL", "NILSON SANTOS", "Nanda", "Natalia Brito CL", "Neide Cl", "Neide Limah🥰😘😍", "Nildo Cl", "Nilson Cl", "Nordeste Variedades", "Nubia CONFEITEIRA", "Olinda Cl", "Patricia CL", "Patrícia CL", "Paulo Cesar Cl", "Pedro Souza Cl", "Priscila Cl", "Queliane Cl", "Quintal Limpo", "Raissa Cl", "Raniel Cl", "Raquel Cl", "Ravena Cl", "Ray Cl Filha De Cileide", "Rayla Santos Cl", "Rayne", "Roberta Cl", "Roberta Lima", "Rodrigo Mota", "Ruan Cl", "Sabrina Cl", "Samuel Cl", "Sandra Cl", "Sergio Cledson", "Silvana Cl", "Simone Cl", "Sofia", "Solange Cl", "Sueli", "Tati", "Tatiane Cl", "Thais Cl", "Thaylla Cl", "Thiago Cl", "Thyany Santos CL", "Valderi" ];
 
-    function salvar(){ 
-      localStorage.setItem(KEY_T,JSON.stringify(transacoes)); 
-      localStorage.setItem(KEY_F,JSON.stringify(fixos)); 
-      localStorage.setItem(KEY_C,JSON.stringify(clientes)); 
-    }
-
-    async function salvarTransacaoNuvem(dados){
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify({
-            cliente: dados.cliente,
-            data: dados.data,
-            responsavel: dados.resp,
-            categoria: dados.cat,
-            tipo: dados.tipo,
-            descricao: dados.desc,
-            valor: dados.val
-          }),
-          headers: { "Content-Type": "application/json" }
-        });
-      } catch (e) {
-        console.error("Erro ao salvar na nuvem:", e);
-      }
-    }
-
-    async function carregarTransacoesNuvem(){
+    // Função para carregar transações do Google Sheets
+    async function carregarTransacoesNuvem() {
       try {
         const resp = await fetch(API_URL);
         const data = await resp.json();
@@ -189,69 +166,86 @@
       }
     }
 
-    async function addTrans(){
-      const cliente=el('cliente').value.trim();
-      const resp=el('responsavel').value;
-      const data=el('data').value;
-      const cat=el('categoria').value;
-      const desc=el('descricao').value;
-      const tipo=el('tipo').value;
-      const val=parseFloat(el('valor').value);
-      if(!cliente||!data||!val){alert('Preencha todos os campos obrigatórios');return;}
-      const nova = {id:Date.now(),cliente,resp,data,cat,desc,tipo,val};
-      transacoes.push(nova);
-      if(!clientes.includes(cliente)) clientes.push(cliente);
-      salvar(); render();
-      salvarTransacaoNuvem(nova); // Envia para o Google Sheets
-      el('cliente').value=''; el('descricao').value=''; el('valor').value='';
+    // Função para salvar transações no Google Sheets
+    async function salvarTransacaoNuvem(dados) {
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            cliente: dados.cliente,
+            data: dados.data,
+            responsavel: dados.resp,
+            categoria: dados.cat,
+            tipo: dados.tipo,
+            descricao: dados.desc,
+            valor: dados.val
+          }),
+          headers: { "Content-Type": "application/json" }
+        });
+      } catch (e) {
+        console.error("Erro ao salvar na nuvem:", e);
+      }
     }
 
-    function render(){
-      const tbody=el('tabelaTransacoes');
-      if(!transacoes.length){
-        tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma transação</td></tr>';
-      }
-      else{
-        tbody.innerHTML=transacoes.map(t=>`
+    // Função para adicionar nova transação
+    async function addTrans() {
+      const cliente = el('cliente').value.trim();
+      const resp = el('responsavel').value;
+      const data = el('data').value;
+      const cat = el('categoria').value;
+      const desc = el('descricao').value;
+      const tipo = el('tipo').value;
+      const val = parseFloat(el('valor').value);
+
+      if (!cliente || !data || !val) { alert('Preencha todos os campos obrigatórios'); return; }
+
+      const nova = { id: Date.now(), cliente, resp, data, cat, desc, tipo, val };
+      transacoes.push(nova);
+      if (!clientes.includes(cliente)) clientes.push(cliente);
+      salvar();
+      render();
+      await salvarTransacaoNuvem(nova); // Envia para o Google Sheets
+      el('cliente').value = '';
+      el('descricao').value = '';
+      el('valor').value = '';
+    }
+
+    // Função para renderizar transações na tabela
+    function render() {
+      const tbody = el('tabelaTransacoes');
+      if (!transacoes.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhuma transação</td></tr>';
+      } else {
+        tbody.innerHTML = transacoes.map(t => `
           <tr>
             <td>${t.cliente}</td><td>${t.resp}</td><td>${new Date(t.data).toLocaleDateString('pt-BR')}</td>
             <td>${t.cat}</td>
-            <td>${t.tipo==='receita'?'<span class="valor-receita">Receita</span>':'<span class="valor-despesa">Despesa</span>'}</td>
-            <td style="text-align:right">${t.tipo==='receita'?'<span class="valor-receita">'+format(t.val)+'</span>':'<span class="valor-despesa">'+format(t.val)+'</span>'}</td>
+            <td>${t.tipo === 'receita' ? '<span class="valor-receita">Receita</span>' : '<span class="valor-despesa">Despesa</span>'}</td>
+            <td style="text-align:right">${t.tipo === 'receita' ? '<span class="valor-receita">' + format(t.val) + '</span>' : '<span class="valor-despesa">' + format(t.val) + '</span>'}</td>
             <td><button onclick="removeTrans(${t.id})">X</button></td>
           </tr>`).join('');
       }
 
-      el('listaFixos').innerHTML = fixos.length ? fixos.map(f=>`<div>${f.nome} — ${format(f.val)} <button onclick="removeFixo(${f.id})">X</button></div>`).join('') : '<div class="empty">Nenhum custo fixo</div>';
+      el('listaFixos').innerHTML = fixos.length ? fixos.map(f => `<div>${f.nome} — ${format(f.val)} <button onclick="removeFixo(${f.id})">X</button></div>`).join('') : '<div class="empty">Nenhum custo fixo</div>';
 
-      const totalR=transacoes.filter(t=>t.tipo==='receita').reduce((a,b)=>a+b.val,0);
-      const totalD=transacoes.filter(t=>t.tipo==='despesa').reduce((a,b)=>a+b.val,0);
-      const totalF=fixos.reduce((a,b)=>a+b.val,0);
-      const saldo=totalR-totalD-totalF;
-      el('totalReceitas').textContent=format(totalR);
-      el('totalDespesas').textContent=format(totalD);
-      el('totalFixos').textContent=format(totalF);
-      el('saldoLiquido').textContent=format(saldo);
-      el('saldoLiquido').className=saldo>=0?'big saldo-pos':'big saldo-neg';
-
-      const mapaClientes={};
-      transacoes.filter(t=>t.tipo==='receita').forEach(t=>mapaClientes[t.cliente]=(mapaClientes[t.cliente]||0)+t.val);
-      const rc=el('receitasPorCliente');
-      rc.innerHTML = Object.keys(mapaClientes).length ? Object.entries(mapaClientes).map(([c,v])=>`<div class="list-item"><div>${c}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
-
-      const mapaServ={};
-      transacoes.filter(t=>t.tipo==='receita').forEach(t=>mapaServ[t.cat]=(mapaServ[t.cat]||0)+t.val);
-      const rs=el('receitasPorServico');
-      rs.innerHTML = Object.keys(mapaServ).length ? Object.entries(mapaServ).map(([s,v])=>`<div class="list-item"><div>${s}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
+      const totalR = transacoes.filter(t => t.tipo === 'receita').reduce((a, b) => a + b.val, 0);
+      const totalD = transacoes.filter(t => t.tipo === 'despesa').reduce((a, b) => a + b.val, 0);
+      const totalF = fixos.reduce((a, b) => a + b.val, 0);
+      const saldo = totalR - totalD - totalF;
+      el('totalReceitas').textContent = format(totalR);
+      el('totalDespesas').textContent = format(totalD);
+      el('totalFixos').textContent = format(totalF);
+      el('saldoLiquido').textContent = format(saldo);
+      el('saldoLiquido').className = saldo >= 0 ? 'big saldo-pos' : 'big saldo-neg';
     }
 
-    // Inicializa
+    // Carregar dados ao abrir a página
     window.addEventListener("load", () => {
       carregarTransacoesNuvem(); // Carrega os dados do Google Sheets
       render();
     });
 
-    el('btnAdd').onclick=addTrans;
+    el('btnAdd').onclick = addTrans;
   </script>
 </body>
 </html>
