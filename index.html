@@ -199,8 +199,6 @@
           mode: 'cors', // Deve ser 'cors' para conseguir ler a resposta JSON
         });
 
-        // O Apps Script retorna JSON na resposta CORS, mas o fetch sem 'no-cors' funciona melhor para leitura.
-        // Se a implantação for 'App da Web' com "Qualquer Pessoa", 'cors' deve funcionar.
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
            console.error("Resposta do Apps Script não é JSON. Talvez precise reimplantar como 'App da Web' com 'Qualquer pessoa'.");
@@ -373,28 +371,74 @@
       rs.innerHTML = Object.keys(mapaServ).length ? Object.entries(mapaServ).map(([s,v])=>`<div class="list-item"><div>${s}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
     }
 
+    // --- FUNÇÃO exportarPDF CORRIGIDA COM QUEBRA DE PÁGINA ---
     async function exportarPDF(){
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      let y=20;
+      let y = 20; // Posição inicial Y
+      
+      // Obtém a altura da página e define margem superior
+      const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+      const margin = 20; 
+      const lineHeight = 7; 
+      const footerMargin = 10; // Margem inferior de segurança
+
+      // 1. Título e Resumo (Conteúdo Fixo)
       doc.setFontSize(16); doc.text('Resumo Financeiro - Gestão Alpha 2026', 14, y); y+=12;
+      
       const totalR=el('totalReceitas').textContent, totalD=el('totalDespesas').textContent, totalF=el('totalFixos').textContent, saldo=el('saldoLiquido').textContent;
+      
       doc.setFontSize(12);
       doc.text(`Total de Receitas: ${totalR}`,14,y+=10);
       doc.text(`Total de Despesas: ${totalD}`,14,y+=8);
       doc.text(`Custos Fixos: ${totalF}`,14,y+=8);
       doc.text(`Saldo Líquido: ${saldo}`,14,y+=10);
 
-      y+=10; doc.text('Receitas por Cliente:',14,y+=8);
-      const rc=document.getElementById('receitasPorCliente').innerText.trim().split('\n');
-      rc.forEach(l=>{ doc.text(l,14,y+=7); });
-
-      y+=10; doc.text('Receitas por Serviço:',14,y+=8);
-      const rs=document.getElementById('receitasPorServico').innerText.trim().split('\n');
-      rs.forEach(l=>{ doc.text(l,14,y+=7); });
+      // 2. Receitas por Cliente (Conteúdo Variável)
+      y+=10; 
+      // Verifica se a próxima seção (título + 1 linha) cabe na página
+      if (y + 8 + lineHeight > pageHeight - footerMargin) { doc.addPage(); y = margin; } 
+      
+      doc.text('Receitas por Cliente:',14,y+=8);
+      
+      const rc=document.getElementById('receitasPorCliente').innerText.trim().split('\n').filter(l => l.trim().length > 0); 
+      
+      rc.forEach(l=>{ 
+        // Verifica se é necessário quebrar a página antes de desenhar a próxima linha
+        if (y + lineHeight > pageHeight - footerMargin) { 
+          doc.addPage();
+          y = margin;
+          doc.setFontSize(12); 
+          doc.text('Receitas por Cliente (continuação):', 14, y); 
+          y += 8; 
+        }
+        doc.text(l,14,y+=lineHeight); 
+      });
+      
+      // 3. Receitas por Serviço (Conteúdo Variável)
+      y+=10; 
+      // Verifica se a próxima seção (título + 1 linha) cabe na página
+      if (y + 8 + lineHeight > pageHeight - footerMargin) { doc.addPage(); y = margin; }
+      
+      doc.text('Receitas por Serviço:',14,y+=8);
+      
+      const rs=document.getElementById('receitasPorServico').innerText.trim().split('\n').filter(l => l.trim().length > 0);
+      
+      rs.forEach(l=>{ 
+        // Verifica se é necessário quebrar a página antes de desenhar a próxima linha
+        if (y + lineHeight > pageHeight - footerMargin) { 
+          doc.addPage();
+          y = margin;
+          doc.setFontSize(12); 
+          doc.text('Receitas por Serviço (continuação):', 14, y); 
+          y += 8; 
+        }
+        doc.text(l,14,y+=lineHeight); 
+      });
 
       doc.save('Resumo_Gestao_Alpha_2026.pdf');
     }
+    // --- FIM DA FUNÇÃO exportarPDF CORRIGIDA ---
 
     el('btnAdd').onclick=addTrans;
     el('btnAddFix').onclick=addFixo;
