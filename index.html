@@ -169,12 +169,13 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    // --- INÍCIO: CONFIGURAÇÃO DE SINCRONIZAÇÃO COM GOOGLE SHEETS (ADICIONADO) ---
+    // --- INÍCIO: CONFIGURAÇÃO DE SINCRONIZAÇÃO COM GOOGLE SHEETS ---
     // ATENÇÃO: SUBSTITUA PELA URL DE IMPLANTAÇÃO (WEB APP) DO SEU APPS SCRIPT
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxhhZrbBx0ZKaXZZn_SgoTRXcy5HVqi0Teh2oEE0DLZSOZFeJqeFvA1cHIw1TiG_bV_/exec'; 
-    // --- FIM: CONFIGURAÇÃO DE SINCRONIZAÇÃO (ADICIONADO) ---
+    const WEB_APP_URL = 'https://script.google.com/macros/library/d/1NwGW8eCkgre2Job9_7_LIKIwAHylj2I0BtZNl3LCrrKnPGgigky1vaYV/2'; 
+    // --- FIM: CONFIGURAÇÃO DE SINCRONIZAÇÃO ---
 
     const KEY_T='gestao_trans'; const KEY_F='gestao_fixos'; const KEY_C='gestao_clientes';
+    // Inicializa com dados locais (fallback) ou vazio
     let transacoes = JSON.parse(localStorage.getItem(KEY_T)||'[]');
     let fixos = JSON.parse(localStorage.getItem(KEY_F)||'[]');
     let clientes = JSON.parse(localStorage.getItem(KEY_C) || '[]')
@@ -183,19 +184,67 @@
     const el=id=>document.getElementById(id);
     const format=v=>'R$ '+Number(v||0).toFixed(2).replace('.',',');
 
+    // Funções de salvamento local (mantidas)
     function salvar(){ 
       localStorage.setItem(KEY_T,JSON.stringify(transacoes)); 
       localStorage.setItem(KEY_F,JSON.stringify(fixos)); 
       localStorage.setItem(KEY_C,JSON.stringify(clientes)); 
     }
 
-    function carregarClientesInicial(){
-      const clientesSalvos = new Set(clientes);
-      const todos = [...new Set([...nomesEmbutidos, ...clientes])];
-      clientes = todos;
-      salvar();
-      atualizarListaClientes();
+    // --- NOVA FUNÇÃO PARA CARREGAR DADOS DO SHEETS (SINCRONIZAÇÃO) ---
+    async function carregarDadosDoSheets(){
+      try {
+        const response = await fetch(WEB_APP_URL, {
+          method: 'GET',
+          mode: 'cors', // Deve ser 'cors' para conseguir ler a resposta JSON
+        });
+
+        // O Apps Script retorna JSON na resposta CORS, mas o fetch sem 'no-cors' funciona melhor para leitura.
+        // Se a implantação for 'App da Web' com "Qualquer Pessoa", 'cors' deve funcionar.
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+           console.error("Resposta do Apps Script não é JSON. Talvez precise reimplantar como 'App da Web' com 'Qualquer pessoa'.");
+           return; 
+        }
+
+        const data = await response.json();
+
+        if(data.result === 'success'){
+          // ATUALIZA AS VARIÁVEIS GLOBAIS COM OS DADOS DO SHEETS
+          transacoes = data.transacoes || [];
+          fixos = data.fixos || [];
+          
+          // Combina clientes da planilha com a lista embutida
+          const clientesSheets = data.clientes || [];
+          const todosClientes = [...new Set([...nomesEmbutidos, ...clientesSheets])];
+          clientes = todosClientes.sort(); 
+
+          // Salva no localStorage APENAS se o carregamento do Sheets foi bem sucedido (para o backup)
+          salvar(); 
+          
+          // Renderiza a visualização com os dados sincronizados
+          atualizarListaClientes();
+          render();
+          console.log("Dados sincronizados com sucesso do Google Sheets.");
+        } else {
+          console.error("Erro ao carregar dados do Apps Script:", data.message);
+        }
+
+      } catch (error) {
+        // Se o fetch falhar (sem internet, erro de CORS, etc.), usamos o localStorage (dados locais)
+        console.warn('Falha ao carregar dados do Google Sheets. Usando dados do localStorage.', error);
+        
+        // Garante que os clientes embutidos estejam na lista local, mesmo com falha na rede.
+        const clientesSalvos = new Set(clientes);
+        const todos = [...new Set([...nomesEmbutidos, ...clientes])];
+        clientes = todos;
+
+        atualizarListaClientes();
+        render();
+      }
     }
+    // --- FIM DA NOVA FUNÇÃO ---
+
 
     function atualizarListaClientes(){
       const dl = el('clientesList');
@@ -203,15 +252,14 @@
     }
 
     function limparTudo(){
-      if(!confirm('Apagar todas as transações, custos fixos e clientes?')) return;
-      // ATENÇÃO: ISTO SÓ LIMPA A VISUALIZAÇÃO LOCAL, NÃO APAGA OS DADOS DO GOOGLE SHEETS.
+      if(!confirm('Apagar todas as transações, custos fixos e clientes? ATENÇÃO: ISTO SÓ LIMPA A VISUALIZAÇÃO LOCAL, NÃO APAGA OS DADOS DO GOOGLE SHEETS!')) return;
       transacoes=[]; fixos=[]; clientes=[];
       localStorage.clear();
       render();
-      alert('Todos os dados foram apagados LOCALMENTE!');
+      alert('Todos os dados foram apagados LOCALMENTE! Para apagar da planilha, você deve fazê-lo manualmente.');
     }
 
-    // --- FUNÇÃO PARA ENVIAR DADOS PARA O GOOGLE SHEETS (ADICIONADO) ---
+    // --- FUNÇÃO PARA ENVIAR DADOS PARA O GOOGLE SHEETS (EXISTENTE) ---
     async function enviarParaSheet(dados, sheetName) {
       const payload = { 
         sheetName: sheetName,
@@ -226,17 +274,17 @@
           body: new URLSearchParams(payload)
         });
         console.log(`Dados enviados para ${sheetName} no Google Sheets.`, response);
-        alert(`Sucesso! Dados adicionados ao Google Sheets!`);
+        // Não alerta aqui para não interromper o fluxo e evitar dois alertas (um do envio, outro do render)
 
       } catch (error) {
         console.error('Erro ao enviar dados para o Google Sheets:', error);
-        alert('Erro de conexão! Não foi possível salvar no Google Sheets. (A funcionalidade local de histórico pode ter falhado, mas os dados foram salvos no Sheets se a URL estiver correta).');
+        alert('Erro de conexão! Não foi possível salvar no Google Sheets. Verifique a URL e a rede.');
       }
     }
-    // --- FIM DA FUNÇÃO ADICIONADA ---
+    // --- FIM DA FUNÇÃO DE ENVIO ---
 
 
-    // --- FUNÇÕES DE ADIÇÃO MODIFICADAS PARA SINCRONIZAÇÃO (ACRESCENTADO 'async/await') ---
+    // --- FUNÇÕES DE ADIÇÃO (MANTIDAS COM ADIÇÃO DO CHAME DE ENVIO) ---
     async function addTrans(){
       const cliente=el('cliente').value.trim(); const resp=el('responsavel').value;
       const data=el('data').value; const cat=el('categoria').value;
@@ -250,7 +298,7 @@
       };
       await enviarParaSheet(novaTransacaoSheet, 'Transacoes');
 
-      // Lógica Local (mantida do código original)
+      // Lógica Local (manter a lista local atualizada)
       transacoes.push(novaTransacaoSheet);
       if(!clientes.includes(cliente)) clientes.push(cliente);
       salvar(); atualizarListaClientes(); render();
@@ -267,15 +315,26 @@
       };
       await enviarParaSheet(novoFixoSheet, 'Custos_Fixos');
       
-      // Lógica Local (mantida do código original)
+      // Lógica Local (manter a lista local atualizada)
       fixos.push(novoFixoSheet);
       el('fixNome').value=''; el('fixValor').value='';
       salvar(); render();
     }
-    // --- FIM DAS FUNÇÕES MODIFICADAS ---
+    // --- FIM DAS FUNÇÕES DE ADIÇÃO ---
 
-    function removeTrans(id){transacoes=transacoes.filter(t=>t.id!==id);salvar();render();}
-    function removeFixo(id){fixos=fixos.filter(f=>f.id!==id);salvar();render();}
+
+    function removeTrans(id){
+      if(!confirm('A remoção de dados aqui NÃO remove o registro salvo na planilha do Google Sheets. Deseja remover apenas localmente?')) return;
+      transacoes=transacoes.filter(t=>t.id!==id);
+      salvar();
+      render();
+    }
+    function removeFixo(id){
+      if(!confirm('A remoção de dados aqui NÃO remove o registro salvo na planilha do Google Sheets. Deseja remover apenas localmente?')) return;
+      fixos=fixos.filter(f=>f.id!==id);
+      salvar();
+      render();
+    }
 
     function render(){
       const tbody=el('tabelaTransacoes');
@@ -342,9 +401,8 @@
     el('btnLimparTudo').onclick=limparTudo;
     el('btnExport').onclick=exportarPDF;
 
-    atualizarListaClientes();
-    carregarClientesInicial();
-    render();
+    // A chamada de inicialização é substituída pelo novo método de sincronização
+    carregarDadosDoSheets();
   </script>
 </body>
 </html>
