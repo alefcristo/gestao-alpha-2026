@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>GESTÃO ALPHA 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --bg: #0b0b0b;
@@ -23,524 +25,843 @@
     }
     .app { max-width: 1200px; margin: 0 auto; background: var(--panel); border-radius: 12px; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.7); }
     header { background: #000; padding: 18px 24px; border-bottom: 1px solid var(--border); }
-    header h1 { margin: 0; font-size: 1.3rem; }
-    .main { display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 20px; }
-    @media (max-width: 980px) { .main { grid-template-columns: 1fr; } .aside { order: -1; } }
-
-    .card { background: var(--card); color: #000; padding: 16px; border-radius: 10px; margin-bottom: 14px; }
-    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
-    input, select, datalist { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.95rem; } /* Adicionado datalist */
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; justify-content: space-between; }
-
-    button {
-      cursor: pointer; border-radius: 8px; padding: 10px 14px;
-      font-weight: 700; border: none;
+    header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .tab-nav { display: flex; border-bottom: 1px solid var(--border); background: #1a1a1a; }
+    .tab-btn { 
+      padding: 12px 24px; cursor: pointer; color: var(--muted); 
+      font-weight: 600; transition: all 0.2s; border-bottom: 3px solid transparent;
     }
-    #btnAdd { background: #000; color: #fff; }
-    #btnLimparTudo { background: #fff; color: #000; }
-    #btnExport { background: #fff; color: #000; }
+    .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .tab-btn.active { color: #fff; border-bottom-color: #3b82f6; background: rgba(255,255,255,0.08); }
+    .tab-content { padding: 24px; }
 
-    .valor-receita { color: var(--receita); font-weight: 800; }
-    .valor-despesa { color: var(--despesa); font-weight: 800; }
-    .saldo-pos { color: var(--receita); font-weight: 900; }
-    .saldo-neg { color: var(--despesa); font-weight: 900; }
+    /* Estilos de Cartões */
+    .card { background: #1a1a1a; border-radius: 8px; padding: 16px; border: 1px solid var(--border); }
+    .card h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+    .value { font-size: 1.5rem; font-weight: 700; }
+    .value.receita { color: var(--receita); }
+    .value.despesa { color: var(--despesa); }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { padding: 10px; border-bottom: 1px solid #ccc; font-size: 0.9rem; text-align: left; }
-    .empty { color: #777; text-align: center; padding: 12px; }
+    /* Estilos de Formulário */
+    .form-group label { display: block; margin-bottom: 4px; font-weight: 500; font-size: 0.875rem; color: var(--muted); }
+    .form-group input, .form-group select {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--border); 
+      border-radius: 6px; background: #000; color: #fff;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
 
-    .summary .box { background: #111; padding: 14px; border-radius: 8px; color: #fff; margin-bottom: 10px; }
-    .summary h4 { margin: 0; font-size: 0.8rem; text-transform: uppercase; color: #ccc; }
-    .summary .big { font-size: 1.3rem; margin-top: 5px; }
+    /* Botões */
+    .btn { 
+      padding: 10px 16px; border-radius: 6px; font-weight: 600; 
+      transition: background-color 0.2s, box-shadow 0.2s;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-secondary { background: #333; color: #fff; border: 1px solid #555; }
+    .btn-secondary:hover { background: #444; }
+    .btn-icon { background: none; border: none; padding: 4px; cursor: pointer; color: var(--muted); }
+    .btn-icon:hover { color: #fff; }
 
-    .list-item { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px dashed rgba(255,255,255,0.1); }
-    .list-item div:first-child { color: #fff; font-weight: 600; }
-    .list-item div:last-child { font-weight: 700; }
-    
-    /* Estilos para o controle de estoque */
-    .estoque-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .estoque-item label { color: #000; font-weight: 600; margin-bottom: 0; }
-    .estoque-item input { width: 80px; text-align: right; padding: 6px; }
-    .alerta-baixo-estoque { background-color: var(--alerta-estoque); color: #000; font-weight: 700; border: 2px solid #e0b400; }
+    /* Tabela */
+    .table-container { overflow-x: auto; margin-top: 20px; }
+    .styled-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+    .styled-table th { background: #222; padding: 12px; text-align: left; font-size: 0.8rem; text-transform: uppercase; color: var(--muted); position: sticky; top: 0; z-index: 10; }
+    .styled-table td { background: #1a1a1a; padding: 12px; border: 1px solid var(--border); border-style: solid none; }
+    .styled-table tr:first-child td { border-top-style: solid; }
+    .styled-table tr:last-child td { border-bottom-style: solid; }
+    .styled-table tr:hover td { background: #252525; }
 
-    footer { background: #000; padding: 10px; text-align: center; color: #888; font-size: 0.85rem; border-top: 1px solid var(--border); }
+    /* Lista de Estoque */
+    .estoque-item { 
+      display: flex; justify-content: space-between; align-items: center; 
+      padding: 10px 16px; margin-bottom: 8px; border-radius: 6px; 
+      background: #222; border: 1px solid #333;
+    }
+    .estoque-item.alerta { 
+      background: rgba(255, 193, 7, 0.1); 
+      border-color: var(--alerta-estoque);
+    }
+    .estoque-item-name { font-weight: 600; }
+    .estoque-item-qty { font-weight: 700; font-size: 1.1rem; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header><h1>GESTÃO ALPHA 2026 - CONTROLE FINANCEIRO</h1></header>
 
-    <div class="main">
-      <div>
-        <section class="card">
-          <h3>Registrar Transação</h3>
-          <label>Cliente</label>
-          <input id="cliente" list="clientesList" placeholder="Nome do cliente">
-          <datalist id="clientesList"></datalist>
+<div id="loader" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+    <span class="ml-4 text-white">Carregando dados da planilha...</span>
+</div>
 
-          <div class="row" style="margin-top:10px;">
-            <div>
-              <label>Responsável</label>
-              <select id="responsavel"><option>Alef</option><option>Aislane</option></select>
-            </div>
-            <div>
-              <label>Data</label>
-              <input type="date" id="data">
-            </div>
-          </div>
+<div class="app">
+    <header>
+        <h1>GESTÃO ALPHA 2026</h1>
+    </header>
 
-          <div class="row" style="margin-top:10px;">
-            <div>
-              <label>Categoria</label>
-              <select id="categoria">
-                <option>Gestão Alpha Digital</option>
-                <option>Alpha Express</option>
-                <option>Alpha Criativo</option>
-                <option>Alpha Protege</option>
-                <option>Alpha Produtos</option> </select>
-            </div>
-            <div>
-              <label>Tipo</label>
-              <select id="tipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select>
-            </div>
-          </div>
+    <nav class="tab-nav" id="tabNav">
+        <div class="tab-btn active" data-tab="resumo">Resumo</div>
+        <div class="tab-btn" data-tab="transacoes">Transações</div>
+        <div class="tab-btn" data-tab="fixos">Custos Fixos</div>
+        <div class="tab-btn" data-tab="estoque">Estoque</div>
+    </nav>
 
-          <label style="margin-top:10px;">Descrição</label>
-          <input id="descricao" list="produtosList" placeholder="Descrição do serviço">
-          <datalist id="produtosList"></datalist>
-
-          <label style="margin-top:10px;">Valor (R$)</label>
-          <input type="number" id="valor" step="0.01">
-
-          <div class="actions">
-            <div style="display:flex; gap:8px;">
-              <button id="btnAdd">➕ Adicionar</button>
-              <button id="btnLimparTudo">🗑️ Limpar Tudo</button>
-            </div>
-            <button id="btnExport">📄 Exportar Resumo em PDF</button>
-          </div>
-        </section>
-
-        <section class="card">
-            <h3>Estoque produtos físicos</h3>
-            <div id="controleEstoque">
+    <div class="tab-content" id="tabContent">
+        <div id="tab-resumo" class="tab-pane">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="card">
+                    <h2>Saldo Atual</h2>
+                    <p id="saldoAtual" class="value"></p>
                 </div>
-            <button id="btnSalvarEstoque" style="margin-top:10px;">💾 Salvar Estoque</button>
-        </section>
-        <section class="card">
-          <h3>Custos Fixos Mensais</h3>
-          <div class="row" style="margin-top:10px;">
-            <input id="fixNome" placeholder="Nome do custo">
-            <input id="fixValor" type="number" placeholder="Valor" step="0.01">
-          </div>
-          <button id="btnAddFix" style="margin-top:10px;">➕ Adicionar Custo Fixo</button>
-          <div id="listaFixos" style="margin-top:10px;"></div>
-        </section>
+                <div class="card">
+                    <h2>Receitas (Mês)</h2>
+                    <p id="receitaMensal" class="value receita"></p>
+                </div>
+                <div class="card">
+                    <h2>Despesas (Mês)</h2>
+                    <p id="despesaMensal" class="value despesa"></p>
+                </div>
+                <div class="card">
+                    <h2>Lucro (Mês)</h2>
+                    <p id="lucroMensal" class="value"></p>
+                </div>
+            </div>
 
-        <section class="card">
-          <h3>Histórico de Transações</h3>
-          <table>
-            <thead>
-              <tr><th>Cliente</th><th>Resp.</th><th>Data</th><th>Categoria</th><th>Tipo</th><th style="text-align:right">Valor</th><th></th></tr>
-            </thead>
-            <tbody id="tabelaTransacoes"><tr><td colspan="7" class="empty">Nenhuma transação</td></tr></tbody>
-          </table>
-        </section>
-      </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card">
+                    <h2>Receitas por Cliente</h2>
+                    <div id="receitasPorCliente" class="text-sm space-y-2"></div>
+                </div>
 
-      <aside class="aside summary">
-        <div class="box">
-          <h4>Total de Receitas</h4>
-          <div id="totalReceitas" class="big valor-receita">R$ 0,00</div>
-        </div>
-        <div class="box">
-          <h4>Total de Despesas</h4>
-          <div id="totalDespesas" class="big valor-despesa">R$ 0,00</div>
-        </div>
-        <div class="box">
-          <h4>Custos Fixos</h4>
-          <div id="totalFixos" class="big">R$ 0,00</div>
-        </div>
-        <div class="box">
-          <h4>Saldo Líquido</h4>
-          <div id="saldoLiquido" class="big">R$ 0,00</div>
+                <div class="card">
+                    <h2>Receitas por Serviço/Categoria</h2>
+                    <div id="receitasPorServico" class="text-sm space-y-2"></div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                 <button class="btn btn-secondary" onclick="exportarPDF()">
+                    Exportar Resumo (PDF)
+                </button>
+            </div>
         </div>
 
-        <div class="box">
-          <h4>Receitas por Cliente</h4>
-          <div id="receitasPorCliente"></div>
+        <div id="tab-transacoes" class="tab-pane hidden">
+            <div class="card mb-6">
+                <h2>Adicionar Transação</h2>
+                <div id="message" class="mb-4 hidden p-3 rounded text-sm"></div>
+                
+                <form id="transForm" class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <div class="form-group md:col-span-1">
+                        <label for="tipo">Tipo</label>
+                        <select id="tipo" required>
+                            <option value="RECEITA">RECEITA</option>
+                            <option value="DESPESA">DESPESA</option>
+                        </select>
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label for="desc">Descrição/Serviço (Produto)</label>
+                        <input type="text" id="desc" list="estoque-datalist" required placeholder="Ex: Manutenção, Cabo Tipo C">
+                        <datalist id="estoque-datalist"></datalist>
+                    </div>
+                    <div class="form-group md:col-span-1">
+                        <label for="val">Valor</label>
+                        <input type="number" id="val" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group md:col-span-1">
+                        <label for="cliente">Cliente</label>
+                        <input type="text" id="cliente" list="clientes-datalist" placeholder="Nome do Cliente">
+                        <datalist id="clientes-datalist"></datalist>
+                    </div>
+                     <div class="form-group md:col-span-1 flex items-end">
+                        <button type="button" id="btnAdd" class="btn btn-primary w-full">Adicionar</button>
+                    </div>
+                    
+                    <div class="form-group md:col-span-2">
+                        <label for="resp">Responsável</label>
+                        <input type="text" id="resp" placeholder="Seu Nome">
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label for="cat">Categoria/Método</label>
+                        <input type="text" id="cat" placeholder="Ex: PIX, Cartão, Salário">
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label for="data">Data</label>
+                        <input type="date" id="data" required>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Histórico de Transações</h2>
+                <div class="table-container">
+                    <table class="styled-table w-full" id="transTable">
+                        <thead>
+                            <tr>
+                                <th class="w-1/12">Data</th>
+                                <th class="w-1/12">Tipo</th>
+                                <th class="w-3/12">Descrição/Serviço</th>
+                                <th class="w-2/12">Cliente</th>
+                                <th class="w-1/12">Valor</th>
+                                <th class="w-2/12">Categoria/Método</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="box">
-          <h4>Receitas por Serviço</h4>
-          <div id="receitasPorServico"></div>
+
+        <div id="tab-fixos" class="tab-pane hidden">
+            <div class="card mb-6">
+                <h2>Adicionar Custo Fixo Mensal</h2>
+                <div id="fixMessage" class="mb-4 hidden p-3 rounded text-sm"></div>
+                <form id="fixForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="form-group md:col-span-2">
+                        <label for="fixNome">Nome do Custo</label>
+                        <input type="text" id="fixNome" required placeholder="Ex: Aluguel, Salário, Internet">
+                    </div>
+                    <div class="form-group md:col-span-1">
+                        <label for="fixVal">Valor Mensal (R$)</label>
+                        <input type="number" id="fixVal" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group md:col-span-1 flex items-end">
+                        <button type="button" id="btnAddFix" class="btn btn-primary w-full">Adicionar Fixo</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Custos Fixos Atuais</h2>
+                <div class="table-container">
+                    <table class="styled-table w-full" id="fixTable">
+                        <thead>
+                            <tr>
+                                <th class="w-4/12">Nome</th>
+                                <th class="w-4/12">Valor Mensal</th>
+                                <th class="w-4/12 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fixTableBody">
+                            </tbody>
+                    </table>
+                </div>
+                <p class="text-right text-lg font-bold mt-4">Total Fixo: <span id="totalFixos">R$ 0,00</span></p>
+            </div>
         </div>
-      </aside>
+
+        <div id="tab-estoque" class="tab-pane hidden">
+            <div class="card mb-6">
+                <h2>Atualizar Estoque Manualmente</h2>
+                <div id="estoqueMessage" class="mb-4 hidden p-3 rounded text-sm"></div>
+                <form id="estoqueForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="form-group md:col-span-2">
+                        <label for="estoqueProd">Nome do Produto</label>
+                        <input type="text" id="estoqueProd" required placeholder="Ex: Cabo Tipo C">
+                    </div>
+                    <div class="form-group md:col-span-1">
+                        <label for="estoqueQty">Quantidade (Nova)</label>
+                        <input type="number" id="estoqueQty" required placeholder="0">
+                    </div>
+                    <div class="form-group md:col-span-1 flex items-end">
+                        <button type="button" id="btnUpdateEstoque" class="btn btn-secondary w-full">
+                            Atualizar Produto
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2>Inventário Atual</h2>
+                    <button id="btnSalvarEstoque" class="btn btn-primary text-sm">
+                        💾 Salvar Estoque (Sincronizar)
+                    </button>
+                </div>
+                <div id="estoqueList" class="space-y-2">
+                    <p class="text-gray-500" id="estoqueEmptyState">Nenhum item em estoque. Use o formulário acima para adicionar.</p>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <footer>Gestão Alpha 2026 — Sistema Offline</footer>
-  </div>
+<script>
+// --- CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ---
+// Substitua ESTA URL pelo Web App URL gerado pelo seu Google Apps Script
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzf4_VqA-L_e14Xn_g_3O_Lq_3fE1uT1x4v5x4x/exec"; // Exemplo, deve ser substituído pelo usuário
+// Constante para a aba de estoque, usada no Apps Script
+const SHEET_ESTOQUE = 'Estoque'; 
+const MAX_RETRIES = 3;
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    // --- INÍCIO: CONFIGURAÇÃO DE SINCRONIZAÇÃO COM GOOGLE SHEETS ---
-    // ATENÇÃO: SUBSTITUA PELA URL DE IMPLANTAÇÃO (WEB APP) DO SEU APPS SCRIPT
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxhhZrbBx0ZKaXZZn_SgoTRXcy5HVqi0Teh2oEE0DLZSOZFeJqeFvA1cHIw1TiG_bV_/exec'; 
-    // --- FIM: CONFIGURAÇÃO DE SINCRONIZAÇÃO ---
+let allTransacoes = [];
+let custosFixos = [];
+let clientesList = [];
+let estoqueData = {}; // Estrutura: { "Produto A": 10, "Produto B": 5 }
 
-    const KEY_T='gestao_trans'; const KEY_F='gestao_fixos'; const KEY_C='gestao_clientes'; 
-    const KEY_E='gestao_estoque'; // CHAVE PARA ESTOQUE
+// --- FUNÇÕES UTILITÁRIAS ---
+
+const el = id => document.getElementById(id);
+
+const formatCurrency = value => {
+    return (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+const showMessage = (msg, type = 'info', targetId = 'message') => {
+    const target = el(targetId);
+    if (!target) return;
+    target.textContent = msg;
+    target.className = `mb-4 p-3 rounded text-sm ${type === 'success' ? 'bg-green-900 text-green-300' : type === 'error' ? 'bg-red-900 text-red-300' : 'bg-blue-900 text-blue-300'}`;
+    target.style.display = 'block';
+};
+
+const hideMessage = (targetId = 'message') => {
+    const target = el(targetId);
+    if (target) target.style.display = 'none';
+};
+
+// --- FUNÇÕES PRINCIPAIS DE GESTÃO ---
+
+/**
+ * Filtra transações pelo mês e ano atual, incluindo Custos Fixos.
+ */
+const getMonthlyData = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    const monthlyTransacoes = allTransacoes.filter(t => {
+        const tDate = new Date(t.data);
+        return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+    });
+
+    // Custos Fixos são adicionados como despesas mensais
+    const fixosAsTransacoes = custosFixos.map(f => ({
+        id: 'FIXO_' + f.id,
+        data: today.toISOString().split('T')[0], // Data de hoje para o cálculo mensal
+        tipo: 'DESPESA',
+        desc: f.nome,
+        val: f.val,
+        cliente: 'N/A',
+        cat: 'Custo Fixo',
+        resp: 'Sistema'
+    }));
+
+    return monthlyTransacoes.concat(fixosAsTransacoes);
+};
+
+/**
+ * Calcula os principais indicadores financeiros.
+ */
+const calculateSummary = () => {
+    const monthlyData = getMonthlyData();
+
+    let receitaMensal = 0;
+    let despesaMensal = 0;
+    let receitaTotal = 0;
+    let despesaTotal = custosFixos.reduce((sum, f) => sum + (f.val || 0), 0); // Começa com o total de fixos
+
+    // Receitas e Despesas do Mês
+    monthlyData.forEach(t => {
+        if (t.tipo === 'RECEITA') {
+            receitaMensal += (t.val || 0);
+        } else if (t.tipo === 'DESPESA') {
+            despesaMensal += (t.val || 0);
+        }
+    });
+
+    // Saldo Total
+    allTransacoes.forEach(t => {
+        if (t.tipo === 'RECEITA') {
+            receitaTotal += (t.val || 0);
+        } else if (t.tipo === 'DESPESA') {
+            despesaTotal += (t.val || 0);
+        }
+    });
     
-    // Inicializa com dados locais (fallback) ou vazio
-    let transacoes = JSON.parse(localStorage.getItem(KEY_T)||'[]');
-    let fixos = JSON.parse(localStorage.getItem(KEY_F)||'[]');
-    let clientes = JSON.parse(localStorage.getItem(KEY_C) || '[]');
+    // Calcula o lucro real do mês (excluindo os fixos duplicados na contagem mensal)
+    const lucroMensal = receitaMensal - despesaMensal;
+    const saldoAtual = receitaTotal - despesaTotal;
+
+    // Receitas por Cliente (Apenas Transações 'RECEITA' do Mês)
+    const receitasPorCliente = monthlyData
+        .filter(t => t.tipo === 'RECEITA' && t.cliente)
+        .reduce((acc, t) => {
+            const cliente = t.cliente.trim() || 'Desconhecido';
+            acc[cliente] = (acc[cliente] || 0) + (t.val || 0);
+            return acc;
+        }, {});
+
+    // Receitas por Serviço/Categoria (Apenas Transações 'RECEITA' do Mês)
+    const receitasPorServico = monthlyData
+        .filter(t => t.tipo === 'RECEITA' && t.desc)
+        .reduce((acc, t) => {
+            const desc = t.desc.trim() || 'Outro Serviço';
+            acc[desc] = acc[desc] || { total: 0, count: 0 };
+            acc[desc].total += (t.val || 0);
+            acc[desc].count += 1;
+            return acc;
+        }, {});
+
+    return {
+        saldoAtual,
+        receitaMensal,
+        despesaMensal,
+        lucroMensal,
+        receitasPorCliente,
+        receitasPorServico
+    };
+};
+
+/**
+ * Atualiza a interface da tab Resumo.
+ */
+const renderSummary = () => {
+    const summary = calculateSummary();
+
+    el('saldoAtual').textContent = formatCurrency(summary.saldoAtual);
+    el('receitaMensal').textContent = formatCurrency(summary.receitaMensal);
+    el('despesaMensal').textContent = formatCurrency(summary.despesaMensal);
     
-    // Configuração inicial do estoque com valores zero e a lista de produtos
-    const PRODUTOS_ESTOQUE = [
-        "CABO TIPO C",
-        "CABO TIPO V8",
-        "CABO IPHONE",
-        "PELICULA CLEAR",
-        "PELICULA PRIVACIDADE"
-    ];
-    let estoque = JSON.parse(localStorage.getItem(KEY_E) || 'null');
-    if (!estoque) { // Inicializa se não houver dados salvos
-        estoque = {};
-        PRODUTOS_ESTOQUE.forEach(p => estoque[p] = 0);
-    }
+    el('lucroMensal').textContent = formatCurrency(summary.lucroMensal);
+    el('lucroMensal').className = 'value ' + (summary.lucroMensal >= 0 ? 'receita' : 'despesa');
 
 
-    const nomesEmbutidos = ["ADEILSON CL", "ANDRE Cl - Ferro Velho", "CICERO X-EXPRESSO","Absolute.perfumaria", "Adeilma", "Ademir", "Admirador", "Adri Cl", "Adriano Cl", "Adriel", "Adriele Cl", "Adriely OMENA CL", "Agapito CL", "Ageu Cl Pai De Aninha", "Agnaldo Cl", "Aldeni Cl", "Alessandro CL", "Alex Cl", "Aliane", "Aliane Barros Cl", "Aline", "Aloizio Cl", "Amelia CL", "Ana Cl", "Ana Paula Cl", "Andre Cl", "Andressa CL", "Andreza Lima Cl", "André Lima Cl", "Andréia Cl", "Ane", "Anny", "Antônio Cl", "Ari Da Prestação", "Arnaldo Cl", "Barbearia SFCLUB", "Barbearia STYLUS", "Beto e Bethe 🐟e🦂❤️😍", "Bianca Cl", "Brisanet - DANIEL", "Bruna", "CARLOS CL", "CARLOS JOSE CL", "CONFEITEIRA LILY", "Carla Cl", "Carlos Lima Cl", "Cassiel Cl", "Cauany Cl", "Chaveiro", "Chaveiro 2", "Cicera Prima De Pai", "Cicinha Cl", "Cida Cl", "Cileide", "Cilene Cl", "Cintia Cl", "Cl", "Cl A", "Cl B", "Cl Nova", "Cl Sem Nome", "Cladeilton Cl", "Cleciane Cl", "Cleide Cl", "Cleo Deus E Fiel", "Confeiteira Mylena BTN 3", "Confeiteira Raiane", "Creusa", "Cristiane Cl", "Cássio Cl", "Cícero Cl", "Cícero Crispim Cl", "Daiane", "Daniel", "Daniela CL", "Dayenne Stella", "Deivid Cl", "Denize", "Deubania", "Diogenes", "Duda Cl", "EDILENE Cl", "EDMILSON - LEVE ME ACESSORIOS", "EDSON CL", "EMILY CL", "EVELIN CL", "Edileide Cl", "Edilma Cl Esposa De Fabricio", "Edilson Cl", "Edjan Cl", "Edjania Barbosa", "Edna Cl", "Ednalva Cl", "Ednalvo", "Eduarda Cl", "Elaine CL", "Elayne", "Eliane Cl", "Elias", "Elias Pereira Cl", "Elielsa Cl", "Elierveson Cl", "Elânia Cl", "Emanuel", "Emanuela Cl", "Emerson Cl", "Eric", "Erick Cl", "Erika Cl", "Erivaldo Cl", "Esaposa de Welinton Primo", "Esequias Cl", "Everaldo Cl", "Everton", "Ezequiel Cl", "FABIO", "Fabiana Cl", "Fabiane CL", "Fabiuane", "Felipe Cl", "Fernanda Lisboa", "Fernando Cl", "Fernando Landim Cl", "Filtros da Ilha 🏝️", "Francisco Cl", "Fábio Cl", "Gabriel Cl", "Gean Cl", "Geovan Cl", "Gerônimo Cl", "Gil Cl - Esposo LIVIA", "Girleide Cl", "Gislaine Pires Cl", "Graziela Cl", "Graziely", "Grazy Cl", "Guilherme Cl", "Gustavo", "Gustavo CL", "Helena", "Henrique Cl", "Hercules Cl", "Igor Cl", "Iracema", "Irailda CL", "Iraldo", "Irene", "Irma CILEIDE CL", "Isa Cl", "Ivete", "Ivonice CL", "JARDA", "Jaciete Cl", "Jadlog PA - Transportadora", "Jadna CL", "Jadson", "Jailma Cl", "Jailson CL", "Jailson Santos Cl", "Jaime Cl Faturas VIVO", "Jalison", "Jamilke", "Jana Personalizados", "Janaina Cl", "Janiele Cl", "Jaqueline Cl", "Jeane Cl", "Jeane Cl - EMPORIO DAS PLANTAS", "Jefferson Cl", "Jeine", "Jennyfer Cl", "Jessica Teixeira Cl", "Jessika CL", "Jhonny Cl", "Jirleide Cl", "Joao", "Jose", "Jose De Assis Cl", "Joselma Sales Cl", "Josenilton Cl", "Josiane Cl", "Josineide CL", "Josy ❤️", "José", "José Cl", "João", "João Batista CL", "João Brito Cl", "João Cl", "João Suzart Junior", "Julia - Cl", "Julio CL", "Junior", "Jurandir", "Juscelia Silva Cl", "Juvenildo Cl", "Juzinou Cl", "Jéssica", "Jéssica Cl Funcionaria MT SOLAR", "Jéssica Confeiteira", "Júlia Matos Cl", "Karolayne Silva Souza Cl", "Kelle Cl", "Kátia", "LEYDE CL", "LUCINHA CHAGAS CL", "Larissa", "Larissa Cl", "Larissa Gomes Cl", "Laudice Cl", "Lay Cl", "Layon Cl", "Leandro", "Leda", "Leeh", "Leno Esposo De VANIA CL", "Lenon Brito Cl", "Leonardo Cl", "Leyde", "Lia Cl", "Lindoercio Cl", "Lisa VictóriaCL", "Lourdes", "Lourdes Cl", "Luana", "Lucas Cl", "Lucia Cl", "Lucilene Cl", "Lucrécia Cl", "Lucy Cl", "Luis Cl", "Lume Jóias", "Lunna Cl", "Lurdes", "Luzia Cl", "MARCIA CL", "MATEUS Cl", "Manoel Cl - Esposo Aires", "Manoel Do SERASA CL", "Marcela Brunely Cl", "Marcio UBER - INDRIVE", "Marco", "Marcondes CL", "Marcos Cl", "Maria", "Maria CL parente De Pai", "Maria Cely - CL", "Maria Cl", "Maria De Fátima CL", "Maria José Cl", "Maria Sioneide Cl", "Mariane", "Marielly", "Marineide", "Mary", "Mary Omena Cl", "Matheus Cl", "Mayko Cl", "Mercia Cl", "Meure Cl", "Micael omena Cl", "Milena Confeiteira Btn 2", "Milly Cl", "Moises", "Márcio CL", "NILSON SANTOS", "Nanda", "Natalia Brito CL", "Neide Cl", "Neide Limah🥰😘😍", "Nildo Cl", "Nilson Cl", "Nordeste Variedades", "Nubia CONFEITEIRA", "Olinda Cl", "Patricia CL", "Patrícia CL", "Paulo Cesar Cl", "Pedro Souza Cl", "Priscila Cl", "Queliane Cl", "Quintal Limpo", "Raissa Cl", "Raniel Cl", "Raquel Cl", "Ravena Cl", "Ray Cl Filha De Cileide", "Rayane Cl", "Raíld Cl", "Renato RN Acessórios", "Ricardo Barbosa", "Ricardo Cl", "Ricardo Pereira Cl", "Richard Cl", "Rita de Cassia - CL", "Roniel CL", "Rosalina Cl", "Rosane Cl", "Rose", "Rosy", "Ruan", "Samuel", "Sergio Medeiros Cl", "Sergio kelle Cl", "Sheila Cl", "Silene Cl", "Silvana", "Silvana Cl", "Silvia Do ACAI - CL", "Sivoneide Cl", "Spl Studio", "Sther Cl", "Suelen", "Sueli Cristina 🌸 NOVO", "Suporte PC", "Suzana CL", "Suzany Cl", "Só Com Pagamento Antes -Gabriel", "Tais", "Taisi", "Tamilis Dias Cl", "Tamires Cl", "Tamires Cl da DINIZ OLAVO", "Tania Cl", "Thaise Cl", "Thiago", "Val CL", "Valdemir Cl", "Valdevanio", "Valdir Cl", "Valmy Cl", "Vanessa Cl", "Verônica Cl", "Viih Cl", "Vini Cl", "Viviane", "WELLINGTON PRIMO", "Welinton Cl", "Welinton Novo", "Wesley Cl", "Wesley Rodrigues Alves", "William", "Wivya", "Zeza Cl", "helida Cl", "jairine Cl", "lidiedna Cl", "luceliaalves143", "luidson", "nidinha", "tchê tchê tchê", "welliton Primo ", "wermeson", "Ádla", "ᴀɴɴᴀ ᴄʟᴀʀᴀ Cl Filha Da Lisa", "𝖁𝖎𝖙𝖔𝖗 𝕷𝖎𝖒𝖆⛓️🕷️", "😎"];    
-    const el=id=>document.getElementById(id);
-    const format=v=>'R$ '+Number(v||0).toFixed(2).replace('.',',');
-    
-    // Nível de alerta para estoque baixo
-    const LIMITE_ALERTA_ESTOQUE = 5;
-
-    // Funções de salvamento local (mantidas)
-    function salvar(){ 
-      localStorage.setItem(KEY_T,JSON.stringify(transacoes)); 
-      localStorage.setItem(KEY_F,JSON.stringify(fixos)); 
-      localStorage.setItem(KEY_C,JSON.stringify(clientes)); 
-      localStorage.setItem(KEY_E,JSON.stringify(estoque)); // SALVA ESTOQUE
-    }
-
-    // --- NOVA FUNÇÃO PARA CARREGAR DADOS DO SHEETS (SINCRONIZAÇÃO) ---
-    async function carregarDadosDoSheets(){
-      try {
-        const response = await fetch(WEB_APP_URL, {
-          method: 'GET',
-          mode: 'cors', // Deve ser 'cors' para conseguir ler a resposta JSON
+    // 1. Receitas por Cliente
+    const rcList = el('receitasPorCliente');
+    rcList.innerHTML = '';
+    const sortedRc = Object.entries(summary.receitasPorCliente).sort((a, b) => b[1] - a[1]);
+    if (sortedRc.length > 0) {
+        sortedRc.forEach(([cliente, valor]) => {
+            rcList.innerHTML += `<p class="flex justify-between">
+                <span class="font-normal text-white">${cliente}:</span>
+                <span class="font-semibold text-[var(--receita)]">${formatCurrency(valor)}</span>
+            </p>`;
         });
+    } else {
+        rcList.innerHTML = '<p class="text-gray-500">Nenhuma receita registrada neste mês.</p>';
+    }
 
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-           console.error("Resposta do Apps Script não é JSON. Talvez precise reimplantar como 'App da Web' com 'Qualquer pessoa'.");
-           return; 
-        }
+    // 2. Receitas por Serviço/Categoria
+    const rsList = el('receitasPorServico');
+    rsList.innerHTML = '';
+    const sortedRs = Object.entries(summary.receitasPorServico).sort((a, b) => b[1].total - a[1].total);
+    if (sortedRs.length > 0) {
+        sortedRs.forEach(([desc, data]) => {
+            rsList.innerHTML += `<p class="flex justify-between">
+                <span class="font-normal text-white">${desc} (${data.count}x):</span>
+                <span class="font-semibold text-[var(--receita)]">${formatCurrency(data.total)}</span>
+            </p>`;
+        });
+    } else {
+        rsList.innerHTML = '<p class="text-gray-500">Nenhum serviço/produto vendido neste mês.</p>';
+    }
 
-        const data = await response.json();
+    // 3. Atualiza o estoque na UI e no datalist
+    updateEstoqueUI();
+};
 
-        if(data.result === 'success'){
-          // ATUALIZA AS VARIÁVEIS GLOBAIS COM OS DADOS DO SHEETS
-          transacoes = data.transacoes || [];
-          fixos = data.fixos || [];
-          // NOVO: Carrega e mescla o estoque, garantindo que todos os produtos existam
-          const estoqueSheets = data.estoque || {};
-          let novoEstoque = {...estoque}; // Mantém a lista de produtos
-          PRODUTOS_ESTOQUE.forEach(p => {
-              // Se o Sheets tem o valor, usa. Caso contrário, mantém o 0 inicial ou o valor local.
-              if (estoqueSheets[p] !== undefined) {
-                  novoEstoque[p] = parseInt(estoqueSheets[p]);
-              }
-          });
-          estoque = novoEstoque;
+/**
+ * Renderiza a interface da tab Transações.
+ */
+const renderTransacoes = () => {
+    // 1. Datalist de Clientes
+    const dlClientes = el('clientes-datalist');
+    dlClientes.innerHTML = clientesList.map(c => `<option value="${c}">`).join('');
 
+    // 2. Tabela de Transações (Ordenada por Data - Mais Recente Primeiro)
+    const tbody = el('transTableBody');
+    tbody.innerHTML = '';
 
-          // Combina clientes da planilha com a lista embutida
-          const clientesSheets = data.clientes || [];
-          const todosClientes = [...new Set([...nomesEmbutidos, ...clientesSheets])];
-          clientes = todosClientes.sort(); 
+    const sortedTransacoes = [...allTransacoes].sort((a, b) => new Date(b.data) - new Date(a.data));
 
-          // Salva no localStorage APENAS se o carregamento do Sheets foi bem sucedido (para o backup)
-          salvar(); 
-          
-          // Renderiza a visualização com os dados sincronizados
-          atualizarListaClientes();
-          atualizarListaProdutos(); // NOVO: Atualiza a datalist de produtos
-          render();
-          console.log("Dados sincronizados com sucesso do Google Sheets.");
-        } else {
-          console.error("Erro ao carregar dados do Apps Script:", data.message);
-        }
-
-      } catch (error) {
-        // Se o fetch falhar (sem internet, erro de CORS, etc.), usamos o localStorage (dados locais)
-        console.warn('Falha ao carregar dados do Google Sheets. Usando dados do localStorage.', error);
+    sortedTransacoes.forEach(t => {
+        const tipoClass = t.tipo === 'RECEITA' ? 'text-[var(--receita)]' : 'text-[var(--despesa)]';
         
-        // Garante que os clientes embutidos estejam na lista local, mesmo com falha na rede.
-        const clientesSalvos = new Set(clientes);
-        const todos = [...new Set([...nomesEmbutidos, ...clientes])];
-        clientes = todos;
+        // Formata a data de AAAA-MM-DD para DD/MM/AAAA
+        const formattedDate = t.data ? t.data.split('-').reverse().join('/') : '';
+        
+        tbody.innerHTML += `
+            <tr class="text-sm">
+                <td>${formattedDate}</td>
+                <td><span class="font-bold ${tipoClass}">${t.tipo}</span></td>
+                <td>${t.desc || '-'}</td>
+                <td>${t.cliente || '-'}</td>
+                <td class="${tipoClass}">${formatCurrency(t.val)}</td>
+                <td>${t.cat || '-'}</td>
+            </tr>
+        `;
+    });
+};
 
-        atualizarListaClientes();
-        atualizarListaProdutos(); // NOVO: Atualiza a datalist de produtos
-        render();
-      }
+/**
+ * Renderiza a interface da tab Custos Fixos.
+ */
+const renderCustosFixos = () => {
+    const tbody = el('fixTableBody');
+    tbody.innerHTML = '';
+    
+    let totalFixos = 0;
+
+    if (custosFixos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500">Nenhum custo fixo registrado.</td></tr>';
+    } else {
+        custosFixos.forEach(f => {
+            totalFixos += (f.val || 0);
+            tbody.innerHTML += `
+                <tr class="text-sm">
+                    <td>${f.nome}</td>
+                    <td>${formatCurrency(f.val)}</td>
+                    <td class="text-right">
+                        <button class="btn-icon" onclick="deleteCustoFixo('${f.id}')" title="Excluir Custo Fixo">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
     }
-    // --- FIM DA NOVA FUNÇÃO ---
 
+    el('totalFixos').textContent = formatCurrency(totalFixos);
+};
 
-    function atualizarListaClientes(){
-      const dl = el('clientesList');
-      dl.innerHTML = clientes.sort().map(c=>`<option value="${c}"></option>`).join('');
-    }
+/**
+ * NOVO: Atualiza a interface da tab Estoque.
+ */
+const updateEstoqueUI = () => {
+    const estoqueListEl = el('estoqueList');
+    estoqueListEl.innerHTML = '';
 
-    // NOVO: Função para popular a datalist de produtos/descrições
-    function atualizarListaProdutos(){
-        const dl = el('produtosList');
-        // A lista de opções inclui os produtos para seleção rápida na descrição
-        dl.innerHTML = PRODUTOS_ESTOQUE.map(p => `<option value="${p}"></option>`).join('');
-    }
+    const produtos = Object.entries(estoqueData);
 
-    // NOVO: Função para renderizar o controle de estoque
-    function renderEstoque(){
-        const container = el('controleEstoque');
-        container.innerHTML = PRODUTOS_ESTOQUE.map(p => {
-            const quantidade = estoque[p] !== undefined ? estoque[p] : 0;
-            const classeAlerta = (quantidade <= LIMITE_ALERTA_ESTOQUE) ? 'alerta-baixo-estoque' : '';
+    if (produtos.length === 0) {
+        el('estoqueEmptyState').style.display = 'block';
+    } else {
+        el('estoqueEmptyState').style.display = 'none';
 
-            return `
-                <div class="estoque-item">
-                    <label>${p}</label>
-                    <input type="number" id="estoque-${p.replace(/\s/g, '_')}" 
-                           value="${quantidade}" min="0" 
-                           class="estoque-input ${classeAlerta}"
-                           data-produto="${p}">
+        // Ordena por nome do produto
+        produtos.sort((a, b) => a[0].localeCompare(b[0])).forEach(([nome, quantidade]) => {
+            const alertaClass = quantidade <= 5 ? 'alerta' : '';
+            const qtyColor = quantidade <= 5 ? 'text-[var(--alerta-estoque)]' : 'text-white';
+
+            estoqueListEl.innerHTML += `
+                <div class="estoque-item ${alertaClass}">
+                    <span class="estoque-item-name">${nome}</span>
+                    <span class="estoque-item-qty ${qtyColor}">${quantidade} unidades</span>
                 </div>
             `;
-        }).join('');
-
-        // Adicionar event listeners para salvar automaticamente no objeto 'estoque'
-        document.querySelectorAll('.estoque-input').forEach(input => {
-            input.onchange = (e) => {
-                const produto = e.target.getAttribute('data-produto');
-                // Garante que o valor seja um número inteiro não negativo
-                const novoValor = Math.max(0, parseInt(e.target.value) || 0); 
-                estoque[produto] = novoValor;
-                e.target.value = novoValor; // Atualiza o campo com o valor sanitizado
-                // Atualiza o visual de alerta se necessário
-                e.target.classList.toggle('alerta-baixo-estoque', novoValor <= LIMITE_ALERTA_ESTOQUE);
-                
-                // *** CORREÇÃO APLICADA AQUI: Salva no localStorage imediatamente para persistir no PC atual. ***
-                salvar();
-            };
         });
     }
+    
+    // Atualiza o datalist de produtos para a tab Transações
+    const dlEstoque = el('estoque-datalist');
+    dlEstoque.innerHTML = produtos.map(([nome,]) => `<option value="${nome}">`).join('');
+};
 
-    // NOVO: Função para salvar o estoque e enviar para o Sheets
-    async function salvarEstoque(){
-        salvar(); // Salva localmente (necessário para que 'estoque' esteja atualizado no localStorage)
-        await enviarParaSheet({ estoque: JSON.stringify(estoque) }, 'Estoque'); // Envia para o Sheets para sincronizar entre PCs
-        alert('Estoque salvo e enviado para o Google Sheets.');
-    }
+/**
+ * Função genérica para enviar dados para o Google Apps Script.
+ */
+const sendToSheet = async (sheetName, data, retries = 0) => {
+    el('loader').style.display = 'flex';
+    const params = new URLSearchParams({ sheetName, ...data }).toString();
+    const url = `${WEB_APP_URL}?${params}`;
 
-    function limparTudo(){
-      if(!confirm('Apagar todas as transações, custos fixos, clientes e ESTOQUE? ATENÇÃO: ISTO SÓ LIMPA A VISUALIZAÇÃO LOCAL, NÃO APAGA OS DADOS DO GOOGLE SHEETS!')) return;
-      transacoes=[]; fixos=[]; clientes=[]; 
-      // Reinicializa o estoque localmente
-      estoque = {};
-      PRODUTOS_ESTOQUE.forEach(p => estoque[p] = 0);
-      
-      localStorage.clear();
-      render();
-      alert('Todos os dados foram apagados LOCALMENTE! Para apagar da planilha, você deve fazê-lo manualmente.');
-    }
-
-    // --- FUNÇÃO PARA ENVIAR DADOS PARA O GOOGLE SHEETS (EXISTENTE) ---
-    async function enviarParaSheet(dados, sheetName) {
-      const payload = { 
-        sheetName: sheetName,
-        ...dados 
-      };
-
-      try {
-        const response = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          mode: 'no-cors', 
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams(payload)
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            // O Apps Script espera dados no corpo da requisição POST
+            body: JSON.stringify(data), 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
-        console.log(`Dados enviados para ${sheetName} no Google Sheets.`, response);
-        // Não alerta aqui para não interromper o fluxo e evitar dois alertas (um do envio, outro do render)
 
-      } catch (error) {
-        console.error('Erro ao enviar dados para o Google Sheets:', error);
-        alert('Erro de conexão! Não foi possível salvar no Google Sheets. Verifique a URL e a rede.');
-      }
+        const responseData = await response.json();
+        el('loader').style.display = 'none';
+        return responseData;
+
+    } catch (error) {
+        el('loader').style.display = 'none';
+        if (retries < MAX_RETRIES) {
+            console.warn(`Tentativa ${retries + 1} falhou. Tentando novamente em 2s...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return sendToSheet(sheetName, data, retries + 1);
+        }
+        showMessage(`Erro ao conectar ao servidor. Verifique o URL do Apps Script. Detalhe: ${error.message}`, 'error');
+        return { result: 'error', message: `Erro de conexão após ${MAX_RETRIES} tentativas.` };
     }
-    // --- FIM DA FUNÇÃO DE ENVIOS ---
+};
 
+/**
+ * Carrega todos os dados iniciais do Google Sheets.
+ */
+const carregarDadosDoSheets = async () => {
+    el('loader').style.display = 'flex';
 
-    // --- FUNÇÕES DE ADIÇÃO (MANTIDAS COM ADIÇÃO DO CHAME DE ENVIO E LÓGICA DE ESTOQUE) ---
-    async function addTrans(){
-      const cliente=el('cliente').value.trim(); const resp=el('responsavel').value;
-      const data=el('data').value; const cat=el('categoria').value;
-      const desc=el('descricao').value; const tipo=el('tipo').value;
-      const val=parseFloat(el('valor').value);
-      if(!cliente||!data||!val){alert('Preencha todos os campos obrigatórios');return;}
+    try {
+        const responseData = await fetch(WEB_APP_URL, { method: 'GET' });
+        const response = await responseData.json();
 
-      // NOVO: Lógica de baixa de estoque se for Receita e a descrição for um dos produtos
-      if (tipo === 'receita' && PRODUTOS_ESTOQUE.includes(desc)) {
-          if (estoque[desc] > 0) {
-              estoque[desc]--; // Dá baixa de 1 unidade
-              // Salva a alteração localmente e envia para o Sheets
-              salvar(); 
-              await enviarParaSheet({ estoque: JSON.stringify(estoque) }, 'Estoque');
-              console.log(`Baixa de 1 unidade em estoque: ${desc}`);
-          } else {
-              if(!confirm(`O item "${desc}" está com 0 unidades no estoque local. Deseja adicionar a transação mesmo assim?`)) return;
-          }
-      }
+        if (response.result === 'success') {
+            allTransacoes = response.transacoes || [];
+            custosFixos = response.fixos || [];
+            clientesList = response.clientes || [];
+            
+            // --- NOVO: CARREGAR ESTOQUE ---
+            if (response.estoque) {
+                estoqueData = response.estoque;
+                console.log('Estoque carregado do Sheet:', estoqueData);
+            }
+            // --- FIM NOVO: CARREGAR ESTOQUE ---
 
-      const novaTransacaoSheet = {
-        id: Date.now(),
-        cliente, resp, data, cat, desc, tipo, val
-      };
-      await enviarParaSheet(novaTransacaoSheet, 'Transacoes');
-
-      // Lógica Local (manter a lista local atualizada)
-      transacoes.push(novaTransacaoSheet);
-      if(!clientes.includes(cliente)) clientes.push(cliente);
-      salvar(); 
-      atualizarListaClientes(); 
-      render();
-      el('cliente').value=''; el('descricao').value=''; el('valor').value='';
+            renderSummary();
+            renderTransacoes();
+            renderCustosFixos();
+            updateEstoqueUI(); // Atualiza a UI do estoque após carregar
+            
+        } else {
+            showMessage(`Erro ao carregar dados: ${response.message}. Verifique o Apps Script e o ID da planilha.`, 'error', 'message');
+        }
+    } catch (error) {
+        showMessage(`Erro fatal de conexão: ${error.message}. Verifique o console.`, 'error', 'message');
+        console.error('Erro no fetch GET:', error);
+    } finally {
+        el('loader').style.display = 'none';
     }
+};
 
-    async function addFixo(){
-      const nome=el('fixNome').value.trim(); const val=parseFloat(el('fixValor').value);
-      if(!nome||!val){alert('Preencha nome e valor');return;}
+/**
+ * Adiciona uma nova transação.
+ */
+const addTrans = async () => {
+    hideMessage();
+    const tipo = el('tipo').value;
+    const desc = el('desc').value.trim();
+    const val = parseFloat(el('val').value);
+    const cliente = el('cliente').value.trim();
+    const resp = el('resp').value.trim();
+    const cat = el('cat').value.trim();
+    const data = el('data').value;
+    const id = Date.now().toString(); // ID único simples
 
-      const novoFixoSheet = {
-        id: Date.now(),
-        nome, val
-      };
-      await enviarParaSheet(novoFixoSheet, 'Custos_Fixos');
-      
-      // Lógica Local (manter a lista local atualizada)
-      fixos.push(novoFixoSheet);
-      el('fixNome').value=''; el('fixValor').value='';
-      salvar(); render();
-    }
-    // --- FIM DAS FUNÇÕES DE ADIÇÃO ---
-
-
-    function removeTrans(id){
-      if(!confirm('A remoção de dados aqui NÃO remove o registro salvo na planilha do Google Sheets. Deseja remover apenas localmente?')) return;
-      transacoes=transacoes.filter(t=>t.id!==id);
-      salvar();
-      render();
-    }
-    function removeFixo(id){
-      if(!confirm('A remoção de dados aqui NÃO remove o registro salvo na planilha do Google Sheets. Deseja remover apenas localmente?')) return;
-      fixos=fixos.filter(f=>f.id!==id);
-      salvar();
-      render();
+    if (!desc || isNaN(val) || val <= 0 || !data) {
+        showMessage('Preencha a descrição, valor e data corretamente.', 'error');
+        return;
     }
 
-    function render(){
-      const tbody=el('tabelaTransacoes');
-      if(!transacoes.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma transação</td></tr>';}
-      else{
-        tbody.innerHTML=transacoes.map(t=>`
-          <tr>
-            <td>${t.cliente}</td><td>${t.resp}</td><td>${new Date(t.data).toLocaleDateString('pt-BR')}</td>
-            <td>${t.cat}</td>
-            <td>${t.tipo==='receita'?'<span class="valor-receita">Receita</span>':'<span class="valor-despesa">'+format(t.val)+'</span>'}</td>
-            <td style="text-align:right">${t.tipo==='receita'?'<span class="valor-receita">'+format(t.val)+'</span>':'<span class="valor-despesa">'+format(t.val)+'</span>'}</td>
-            <td><button onclick="removeTrans(${t.id})">X</button></td>
-          </tr>`).join('');
-      }
+    const newTrans = { id, cliente, resp, data, cat, desc, tipo, val };
+    
+    // 1. Salva na planilha
+    const saveResult = await sendToSheet('Transacoes', newTrans);
 
-      el('listaFixos').innerHTML = fixos.length ? fixos.map(f=>`<div>${f.nome} — ${format(f.val)} <button onclick="removeFixo(${f.id})">X</button></div>`).join('') : '<div class="empty">Nenhum custo fixo</div>';
+    if (saveResult.result === 'success') {
+        showMessage('Transação salva com sucesso.', 'success');
+        
+        // --- ATUALIZA ESTOQUE SE FOR RECEITA (Venda) ---
+        // A descrição (desc) é o nome do produto no estoque
+        if (tipo === 'RECEITA' && estoqueData[desc] !== undefined) {
+            // Decrementa a quantidade, garantindo que não fique negativa
+            estoqueData[desc] = Math.max(0, estoqueData[desc] - 1);
+            
+            // Salva o estoque atualizado na planilha (sincronizando)
+            // Usamos 'await' para garantir que esta atualização termine antes de recarregar
+            await salvarEstoque();
+        }
+        // --- FIM NOVO: ATUALIZA ESTOQUE ---
 
-      const totalR=transacoes.filter(t=>t.tipo==='receita').reduce((a,b)=>a+b.val,0);
-      const totalD=transacoes.filter(t=>t.tipo==='despesa').reduce((a,b)=>a+b.val,0);
-      const totalF=fixos.reduce((a,b)=>a+b.val,0);
-      const saldo=totalR-totalD-totalF;
-      el('totalReceitas').textContent=format(totalR);
-      el('totalDespesas').textContent=format(totalD);
-      el('totalFixos').textContent=format(totalF);
-      el('saldoLiquido').textContent=format(saldo);
-      el('saldoLiquido').className=saldo>=0?'big saldo-pos':'big saldo-neg';
+        // 2. Atualiza a lista local e a UI
+        allTransacoes.push(newTrans);
 
-      const mapaClientes={};
-      transacoes.filter(t=>t.tipo==='receita').forEach(t=>mapaClientes[t.cliente]=(mapaClientes[t.cliente]||0)+t.val);
-      const rc=el('receitasPorCliente');
-      rc.innerHTML = Object.keys(mapaClientes).length ? Object.entries(mapaClientes).map(([c,v])=>`<div class="list-item"><div>${c}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
+        // Atualiza a lista de clientes se for novo
+        if (cliente && cliente.length > 0 && !clientesList.includes(cliente)) {
+            clientesList.push(cliente);
+        }
 
-      // --- INÍCIO: ALTERAÇÃO PARA INCLUIR CONTAGEM DE SERVIÇOS ---
-      const mapaServ={};
-      const mapaContagemServ = {};
-      
-      transacoes.filter(t=>t.tipo==='receita').forEach(t=>{
-        // Acumula a receita
-        mapaServ[t.cat]=(mapaServ[t.cat]||0)+t.val;
-        // Acumula a contagem de serviços
-        mapaContagemServ[t.cat]=(mapaContagemServ[t.cat]||0)+1;
-      });
-      
-      const rs=el('receitasPorServico');
-      rs.innerHTML = Object.keys(mapaServ).length ? Object.entries(mapaServ).map(([s,v])=>{
-          const contagem = mapaContagemServ[s];
-          return `
-            <div class="list-item">
-                <div>${s} (${contagem}x)</div> 
-                <div class="valor-receita">${format(v)}</div>
-            </div>
-          `;
-      }).join('') : '<div class="empty">Nenhuma receita</div>';
-      // --- FIM: ALTERAÇÃO PARA INCLUIR CONTAGEM DE SERVIÇOS ---
-      
-      // NOVO: Renderiza o controle de estoque
-      renderEstoque();
+        // Limpa o formulário e renderiza novamente
+        el('transForm').reset();
+        el('data').valueAsDate = new Date(); // Reseta a data para hoje
+        renderSummary();
+        renderTransacoes();
+        updateEstoqueUI(); // Garante que o datalist e a lista de estoque estejam atualizados
+
+    } else {
+        showMessage(`Erro ao salvar transação: ${saveResult.message}`, 'error');
+    }
+};
+
+/**
+ * Adiciona um custo fixo.
+ */
+const addCustoFixo = async () => {
+    hideMessage('fixMessage');
+    const nome = el('fixNome').value.trim();
+    const val = parseFloat(el('fixVal').value);
+    const id = Date.now().toString();
+
+    if (!nome || isNaN(val) || val <= 0) {
+        showMessage('Preencha o nome e o valor do custo fixo corretamente.', 'error', 'fixMessage');
+        return;
     }
 
-    // --- FUNÇÃO exportarPDF CORRIGIDA COM QUEBRA DE PÁGINA (sem alterações substantivas) ---
-    async function exportarPDF(){
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let y = 20; // Posição inicial Y
-      
-      // Obtém a altura da página e define margem superior
-      const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
-      const margin = 20; 
-      const lineHeight = 7; 
-      const footerMargin = 10; // Margem inferior de segurança
+    const newCusto = { id, nome, val };
+    
+    // 1. Salva na planilha
+    const saveResult = await sendToSheet('Custos_Fixos', newCusto);
 
-      // 1. Título e Resumo (Conteúdo Fixo)
-      doc.setFontSize(16); doc.text('Resumo Financeiro - Gestão Alpha 2026', 14, y); y+=12;
-      
-      const totalR=el('totalReceitas').textContent, totalD=el('totalDespesas').textContent, totalF=el('totalFixos').textContent, saldo=el('saldoLiquido').textContent;
-      
-      doc.setFontSize(12);
-      doc.text(`Total de Receitas: ${totalR}`,14,y+=10);
-      doc.text(`Total de Despesas: ${totalD}`,14,y+=8);
-      doc.text(`Custos Fixos: ${totalF}`,14,y+=8);
-      doc.text(`Saldo Líquido: ${saldo}`,14,y+=10);
+    if (saveResult.result === 'success') {
+        showMessage('Custo Fixo salvo com sucesso.', 'success', 'fixMessage');
+        custosFixos.push(newCusto);
+        el('fixForm').reset();
+        renderSummary();
+        renderCustosFixos();
+    } else {
+        showMessage(`Erro ao salvar custo fixo: ${saveResult.message}`, 'error', 'fixMessage');
+    }
+};
 
-      // 2. Receitas por Cliente (Conteúdo Variável)
-      y+=10; 
-      // Verifica se a próxima seção (título + 1 linha) cabe na página
-      if (y + 8 + lineHeight > pageHeight - footerMargin) { doc.addPage(); y = margin; } 
-      
-      doc.text('Receitas por Cliente:',14,y+=8);
-      
-      const rc=document.getElementById('receitasPorCliente').innerText.trim().split('\n').filter(l => l.trim().length > 0); 
-      
-      rc.forEach(l=>{ 
+/**
+ * Exclui um custo fixo (Esta função não interage com a planilha no Apps Script, apenas simula a remoção localmente)
+ * Para exclusão real, seria necessário implementar o endpoint no Apps Script.
+ */
+const deleteCustoFixo = (id) => {
+    // Implementação de exclusão no Sheets requer lógica mais complexa no Apps Script. 
+    // Por simplicidade, vamos apenas simular a exclusão localmente.
+    // Lembre-se: para persistência real, é preciso enviar a requisição de DELETE ao Apps Script.
+    
+    const originalLength = custosFixos.length;
+    custosFixos = custosFixos.filter(f => f.id !== id);
+    
+    if (custosFixos.length < originalLength) {
+        showMessage('Custo fixo removido localmente. Para persistir, implemente a exclusão na planilha.', 'info', 'fixMessage');
+        renderSummary();
+        renderCustosFixos();
+    }
+};
+
+/**
+ * Adiciona ou atualiza um item de estoque (chamado pela UI do estoque).
+ */
+const updateEstoque = () => {
+    hideMessage('estoqueMessage');
+    const produto = el('estoqueProd').value.trim();
+    const qty = parseInt(el('estoqueQty').value);
+
+    if (!produto || isNaN(qty) || qty < 0) {
+        showMessage('Preencha o nome do produto e a quantidade corretamente.', 'error', 'estoqueMessage');
+        return;
+    }
+
+    // Adiciona ou sobrescreve a quantidade
+    estoqueData[produto] = qty;
+
+    showMessage(`Estoque de "${produto}" atualizado para ${qty}. Clique em "Salvar Estoque" para sincronizar.`, 'success', 'estoqueMessage');
+    
+    el('estoqueForm').reset();
+    updateEstoqueUI();
+};
+
+/**
+ * Envia o objeto de estoque completo para o Google Apps Script para sincronização (sobrescrita).
+ */
+const salvarEstoque = async () => {
+    hideMessage('estoqueMessage');
+    
+    // Filtra produtos com quantidade zero antes de salvar
+    const estoqueToSave = Object.keys(estoqueData).reduce((acc, key) => {
+        if (estoqueData[key] > 0) {
+            acc[key] = estoqueData[key];
+        }
+        return acc;
+    }, {});
+    
+    const saveResult = await sendToSheet(SHEET_ESTOQUE, {
+        sheetName: SHEET_ESTOQUE,
+        // O Apps Script espera o estoque como uma string JSON no POST
+        estoque: JSON.stringify(estoqueToSave) 
+    });
+
+    if (saveResult.result === 'success') {
+        showMessage('Estoque sincronizado com sucesso!', 'success', 'estoqueMessage');
+        // O estoque local deve ser atualizado para refletir a versão salva (sem zeros)
+        estoqueData = estoqueToSave; 
+        updateEstoqueUI();
+    } else {
+        showMessage(`Erro ao sincronizar estoque: ${saveResult.message}`, 'error', 'estoqueMessage');
+    }
+    
+    return saveResult;
+};
+
+
+// --- EXPORTAÇÃO PDF (usando jsPDF) ---
+
+const exportarPDF = () => {
+    if (typeof window.jspdf === 'undefined') {
+        showMessage('Erro: jsPDF não carregado. Tente recarregar a página.', 'error', 'message');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Configurações
+    const margin = 15;
+    const lineHeight = 7;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const footerMargin = 15;
+    let y = margin;
+    
+    // Adiciona a fonte para caracteres acentuados (necessário para jsPDF)
+    doc.setFont('Helvetica');
+
+    // Título
+    doc.setFontSize(18);
+    doc.text('Resumo de Gestão Financeira Mensal', 14, y);
+    y += 10;
+    
+    // Data de Geração
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 14, y);
+    y += 10;
+
+    // Títulos de Finanças
+    doc.setFontSize(12);
+    doc.text('Indicadores Financeiros (Mês Atual):', 14, y);
+    y += 8;
+    
+    // 1. Indicadores (Saldo, Receita, Despesa, Lucro)
+    const summary = calculateSummary();
+    doc.setFontSize(10);
+    
+    // Saldo Atual
+    doc.text(`- Saldo Total (Geral): ${formatCurrency(summary.saldoAtual)}`, 14, y+=lineHeight);
+    
+    // Receitas
+    doc.setTextColor(46, 164, 79); // var(--receita)
+    doc.text(`- Receitas do Mês: ${formatCurrency(summary.receitaMensal)}`, 14, y+=lineHeight);
+
+    // Despesas
+    doc.setTextColor(229, 83, 75); // var(--despesa)
+    doc.text(`- Despesas do Mês: ${formatCurrency(summary.despesaMensal)}`, 14, y+=lineHeight);
+    
+    // Lucro
+    doc.setTextColor(summary.lucroMensal >= 0 ? 46 : 229, summary.lucroMensal >= 0 ? 164 : 83, summary.lucroMensal >= 0 ? 79 : 75);
+    doc.text(`- Lucro do Mês: ${formatCurrency(summary.lucroMensal)}`, 14, y+=lineHeight);
+    
+    doc.setTextColor(255, 255, 255); // Volta para branco
+
+    // 2. Receitas por Cliente (Conteúdo Variável)
+    y+=10; 
+    // Verifica se a próxima seção (título + 1 linha) cabe na página
+    if (y + 8 + lineHeight > pageHeight - footerMargin) { doc.addPage(); y = margin; }
+
+    doc.setFontSize(12);
+    doc.text('Receitas por Cliente:',14,y+=8);
+    
+    doc.setFontSize(10);
+    // Usa o conteúdo textual da div (já formatado pela renderSummary)
+    const rc=document.getElementById('receitasPorCliente').innerText.trim().split('\n').filter(l => l.trim().length > 0);
+    
+    rc.forEach(l=>{ 
         // Verifica se é necessário quebrar a página antes de desenhar a próxima linha
         if (y + lineHeight > pageHeight - footerMargin) { 
           doc.addPage();
@@ -550,20 +871,22 @@
           y += 8; 
         }
         doc.text(l,14,y+=lineHeight); 
-      });
-      
-      // 3. Receitas por Serviço (Conteúdo Variável)
-      y+=10; 
-      // Verifica se a próxima seção (título + 1 linha) cabe na página
-      if (y + 8 + lineHeight > pageHeight - footerMargin) { doc.addPage(); y = margin; }
-      
-      doc.text('Receitas por Serviço:',14,y+=8);
-      
-      const rs=document.getElementById('receitasPorServico').innerText.trim().split('\n').filter(l => l.trim().length > 0);
-      
-      // NOTE: O PDF refletirá o formato "Categoria (Contagem x) R$ Valor".
-      
-      rs.forEach(l=>{ 
+    });
+    
+    // 3. Receitas por Serviço (Conteúdo Variável)
+    y+=10; 
+    // Verifica se a próxima seção (título + 1 linha) cabe na página
+    if (y + 8 + lineHeight > pageHeight - footerMargin) { doc.addPage(); y = margin; }
+    
+    doc.setFontSize(12);
+    doc.text('Receitas por Serviço:',14,y+=8);
+    
+    doc.setFontSize(10);
+    const rs=document.getElementById('receitasPorServico').innerText.trim().split('\n').filter(l => l.trim().length > 0);
+    
+    // NOTE: O PDF refletirá o formato "Categoria (Contagem x) R$ Valor".
+    
+    rs.forEach(l=>{ 
         // Verifica se é necessário quebrar a página antes de desenhar a próxima linha
         if (y + lineHeight > pageHeight - footerMargin) { 
           doc.addPage();
@@ -573,20 +896,54 @@
           y += 8; 
         }
         doc.text(l,14,y+=lineHeight); 
-      });
+    });
 
-      doc.save('Resumo_Gestao_Alpha_2026.pdf');
-    }
-    // --- FIM DA FUNÇÃO exportarPDF CORRIGIDA ---
+    doc.save('Resumo_Gestao_Alpha_2026.pdf');
+};
+// --- FIM DA FUNÇÃO exportarPDF CORRIGIDA ---
 
-    el('btnAdd').onclick=addTrans;
-    el('btnAddFix').onclick=addFixo;
-    el('btnLimparTudo').onclick=limparTudo;
-    el('btnExport').onclick=exportarPDF;
-    el('btnSalvarEstoque').onclick=salvarEstoque; // Evento para salvar e SINCRONIZAR estoque
 
-    // A chamada de inicialização é substituída pelo novo método de sincronização
+// --- INICIALIZAÇÃO ---
+
+const setupEventListeners = () => {
+    // 1. Navegação por Abas
+    el('tabNav').addEventListener('click', (e) => {
+        const tabBtn = e.target.closest('.tab-btn');
+        if (!tabBtn) return;
+        
+        // Remove 'active' de todos os botões e esconde todas as abas
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+
+        // Ativa o botão e mostra a aba correta
+        tabBtn.classList.add('active');
+        el(`tab-${tabBtn.dataset.tab}`).classList.remove('hidden');
+
+        // Renderiza a tab específica se for necessário
+        if (tabBtn.dataset.tab === 'transacoes') renderTransacoes();
+        if (tabBtn.dataset.tab === 'fixos') renderCustosFixos();
+        if (tabBtn.dataset.tab === 'estoque') updateEstoqueUI();
+        if (tabBtn.dataset.tab === 'resumo') renderSummary();
+    });
+
+    // 2. Transações
+    el('btnAdd').onclick = addTrans;
+    el('data').valueAsDate = new Date(); // Define a data padrão como hoje
+
+    // 3. Custos Fixos
+    el('btnAddFix').onclick = addCustoFixo;
+
+    // 4. Estoque
+    el('btnUpdateEstoque').onclick = updateEstoque; // Atualiza localmente
+    el('btnSalvarEstoque').onclick = salvarEstoque; // Sincroniza com o Sheets
+};
+
+// Inicia a aplicação
+window.onload = () => {
+    setupEventListeners();
     carregarDadosDoSheets();
-  </script>
+};
+</script>
+
 </body>
 </html>
