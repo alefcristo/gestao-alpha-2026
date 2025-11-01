@@ -13,6 +13,7 @@
       --border: rgba(255,255,255,0.07);
       --receita: #2ea44f;
       --despesa: #e5534b;
+      --alerta-estoque: #ffc107; /* Amarelo para alerta */
       font-family: Inter, system-ui, sans-serif;
     }
     * { box-sizing: border-box; }
@@ -28,7 +29,7 @@
 
     .card { background: var(--card); color: #000; padding: 16px; border-radius: 10px; margin-bottom: 14px; }
     label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
-    input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.95rem; }
+    input, select, datalist { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.95rem; } /* Adicionado datalist */
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; justify-content: space-between; }
 
@@ -56,6 +57,12 @@
     .list-item { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px dashed rgba(255,255,255,0.1); }
     .list-item div:first-child { color: #fff; font-weight: 600; }
     .list-item div:last-child { font-weight: 700; }
+    
+    /* Estilos para o controle de estoque */
+    .estoque-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .estoque-item label { color: #000; font-weight: 600; margin-bottom: 0; }
+    .estoque-item input { width: 80px; text-align: right; padding: 6px; }
+    .alerta-baixo-estoque { background-color: var(--alerta-estoque); color: #000; font-weight: 700; border: 2px solid #e0b400; }
 
     footer { background: #000; padding: 10px; text-align: center; color: #888; font-size: 0.85rem; border-top: 1px solid var(--border); }
   </style>
@@ -91,7 +98,7 @@
                 <option>Alpha Express</option>
                 <option>Alpha Criativo</option>
                 <option>Alpha Protege</option>
-              </select>
+                <option>Alpha Produtos</option> </select>
             </div>
             <div>
               <label>Tipo</label>
@@ -100,7 +107,8 @@
           </div>
 
           <label style="margin-top:10px;">Descrição</label>
-          <input id="descricao" placeholder="Descrição do serviço">
+          <input id="descricao" list="produtosList" placeholder="Descrição do serviço">
+          <datalist id="produtosList"></datalist>
 
           <label style="margin-top:10px;">Valor (R$)</label>
           <input type="number" id="valor" step="0.01">
@@ -114,6 +122,12 @@
           </div>
         </section>
 
+        <section class="card">
+            <h3>Estoque produtos físicos</h3>
+            <div id="controleEstoque">
+                </div>
+            <button id="btnSalvarEstoque" style="margin-top:10px;">💾 Salvar Estoque</button>
+        </section>
         <section class="card">
           <h3>Custos Fixos Mensais</h3>
           <div class="row" style="margin-top:10px;">
@@ -174,21 +188,42 @@
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxhhZrbBx0ZKaXZZn_SgoTRXcy5HVqi0Teh2oEE0DLZSOZFeJqeFvA1cHIw1TiG_bV_/exec'; 
     // --- FIM: CONFIGURAÇÃO DE SINCRONIZAÇÃO ---
 
-    const KEY_T='gestao_trans'; const KEY_F='gestao_fixos'; const KEY_C='gestao_clientes';
+    const KEY_T='gestao_trans'; const KEY_F='gestao_fixos'; const KEY_C='gestao_clientes'; 
+    const KEY_E='gestao_estoque'; // CHAVE PARA ESTOQUE
+    
     // Inicializa com dados locais (fallback) ou vazio
     let transacoes = JSON.parse(localStorage.getItem(KEY_T)||'[]');
     let fixos = JSON.parse(localStorage.getItem(KEY_F)||'[]');
-    let clientes = JSON.parse(localStorage.getItem(KEY_C) || '[]')
+    let clientes = JSON.parse(localStorage.getItem(KEY_C) || '[]');
+    
+    // Configuração inicial do estoque com valores zero e a lista de produtos
+    const PRODUTOS_ESTOQUE = [
+        "CABO TIPO C",
+        "CABO TIPO V8",
+        "CABO IPHONE",
+        "PELICULA CLEAR",
+        "PELICULA PRIVACIDADE"
+    ];
+    let estoque = JSON.parse(localStorage.getItem(KEY_E) || 'null');
+    if (!estoque) { // Inicializa se não houver dados salvos
+        estoque = {};
+        PRODUTOS_ESTOQUE.forEach(p => estoque[p] = 0);
+    }
+
 
     const nomesEmbutidos = ["ADEILSON CL", "ANDRE Cl - Ferro Velho", "CICERO X-EXPRESSO","Absolute.perfumaria", "Adeilma", "Ademir", "Admirador", "Adri Cl", "Adriano Cl", "Adriel", "Adriele Cl", "Adriely OMENA CL", "Agapito CL", "Ageu Cl Pai De Aninha", "Agnaldo Cl", "Aldeni Cl", "Alessandro CL", "Alex Cl", "Aliane", "Aliane Barros Cl", "Aline", "Aloizio Cl", "Amelia CL", "Ana Cl", "Ana Paula Cl", "Andre Cl", "Andressa CL", "Andreza Lima Cl", "André Lima Cl", "Andréia Cl", "Ane", "Anny", "Antônio Cl", "Ari Da Prestação", "Arnaldo Cl", "Barbearia SFCLUB", "Barbearia STYLUS", "Beto e Bethe 🐟e🦂❤️😍", "Bianca Cl", "Brisanet - DANIEL", "Bruna", "CARLOS CL", "CARLOS JOSE CL", "CONFEITEIRA LILY", "Carla Cl", "Carlos Lima Cl", "Cassiel Cl", "Cauany Cl", "Chaveiro", "Chaveiro 2", "Cicera Prima De Pai", "Cicinha Cl", "Cida Cl", "Cileide", "Cilene Cl", "Cintia Cl", "Cl", "Cl A", "Cl B", "Cl Nova", "Cl Sem Nome", "Cladeilton Cl", "Cleciane Cl", "Cleide Cl", "Cleo Deus E Fiel", "Confeiteira Mylena BTN 3", "Confeiteira Raiane", "Creusa", "Cristiane Cl", "Cássio Cl", "Cícero Cl", "Cícero Crispim Cl", "Daiane", "Daniel", "Daniela CL", "Dayenne Stella", "Deivid Cl", "Denize", "Deubania", "Diogenes", "Duda Cl", "EDILENE Cl", "EDMILSON - LEVE ME ACESSORIOS", "EDSON CL", "EMILY CL", "EVELIN CL", "Edileide Cl", "Edilma Cl Esposa De Fabricio", "Edilson Cl", "Edjan Cl", "Edjania Barbosa", "Edna Cl", "Ednalva Cl", "Ednalvo", "Eduarda Cl", "Elaine CL", "Elayne", "Eliane Cl", "Elias", "Elias Pereira Cl", "Elielsa Cl", "Elierveson Cl", "Elânia Cl", "Emanuel", "Emanuela Cl", "Emerson Cl", "Eric", "Erick Cl", "Erika Cl", "Erivaldo Cl", "Esaposa de Welinton Primo", "Esequias Cl", "Everaldo Cl", "Everton", "Ezequiel Cl", "FABIO", "Fabiana Cl", "Fabiane CL", "Fabiuane", "Felipe Cl", "Fernanda Lisboa", "Fernando Cl", "Fernando Landim Cl", "Filtros da Ilha 🏝️", "Francisco Cl", "Fábio Cl", "Gabriel Cl", "Gean Cl", "Geovan Cl", "Gerônimo Cl", "Gil Cl - Esposo LIVIA", "Girleide Cl", "Gislaine Pires Cl", "Graziela Cl", "Graziely", "Grazy Cl", "Guilherme Cl", "Gustavo", "Gustavo CL", "Helena", "Henrique Cl", "Hercules Cl", "Igor Cl", "Iracema", "Irailda CL", "Iraldo", "Irene", "Irma CILEIDE CL", "Isa Cl", "Ivete", "Ivonice CL", "JARDA", "Jaciete Cl", "Jadlog PA - Transportadora", "Jadna CL", "Jadson", "Jailma Cl", "Jailson CL", "Jailson Santos Cl", "Jaime Cl Faturas VIVO", "Jalison", "Jamilke", "Jana Personalizados", "Janaina Cl", "Janiele Cl", "Jaqueline Cl", "Jeane Cl", "Jeane Cl - EMPORIO DAS PLANTAS", "Jefferson Cl", "Jeine", "Jennyfer Cl", "Jessica Teixeira Cl", "Jessika CL", "Jhonny Cl", "Jirleide Cl", "Joao", "Jose", "Jose De Assis Cl", "Joselma Sales Cl", "Josenilton Cl", "Josiane Cl", "Josineide CL", "Josy ❤️", "José", "José Cl", "João", "João Batista CL", "João Brito Cl", "João Cl", "João Suzart Junior", "Julia - Cl", "Julio CL", "Junior", "Jurandir", "Juscelia Silva Cl", "Juvenildo Cl", "Juzinou Cl", "Jéssica", "Jéssica Cl Funcionaria MT SOLAR", "Jéssica Confeiteira", "Júlia Matos Cl", "Karolayne Silva Souza Cl", "Kelle Cl", "Kátia", "LEYDE CL", "LUCINHA CHAGAS CL", "Larissa", "Larissa Cl", "Larissa Gomes Cl", "Laudice Cl", "Lay Cl", "Layon Cl", "Leandro", "Leda", "Leeh", "Leno Esposo De VANIA CL", "Lenon Brito Cl", "Leonardo Cl", "Leyde", "Lia Cl", "Lindoercio Cl", "Lisa VictóriaCL", "Lourdes", "Lourdes Cl", "Luana", "Lucas Cl", "Lucia Cl", "Lucilene Cl", "Lucrécia Cl", "Lucy Cl", "Luis Cl", "Lume Jóias", "Lunna Cl", "Lurdes", "Luzia Cl", "MARCIA CL", "MATEUS Cl", "Manoel Cl - Esposo Aires", "Manoel Do SERASA CL", "Marcela Brunely Cl", "Marcio UBER - INDRIVE", "Marco", "Marcondes CL", "Marcos Cl", "Maria", "Maria CL parente De Pai", "Maria Cely - CL", "Maria Cl", "Maria De Fátima CL", "Maria José Cl", "Maria Sioneide Cl", "Mariane", "Marielly", "Marineide", "Mary", "Mary Omena Cl", "Matheus Cl", "Mayko Cl", "Mercia Cl", "Meure Cl", "Micael omena Cl", "Milena Confeiteira Btn 2", "Milly Cl", "Moises", "Márcio CL", "NILSON SANTOS", "Nanda", "Natalia Brito CL", "Neide Cl", "Neide Limah🥰😘😍", "Nildo Cl", "Nilson Cl", "Nordeste Variedades", "Nubia CONFEITEIRA", "Olinda Cl", "Patricia CL", "Patrícia CL", "Paulo Cesar Cl", "Pedro Souza Cl", "Priscila Cl", "Queliane Cl", "Quintal Limpo", "Raissa Cl", "Raniel Cl", "Raquel Cl", "Ravena Cl", "Ray Cl Filha De Cileide", "Rayane Cl", "Raíld Cl", "Renato RN Acessórios", "Ricardo Barbosa", "Ricardo Cl", "Ricardo Pereira Cl", "Richard Cl", "Rita de Cassia - CL", "Roniel CL", "Rosalina Cl", "Rosane Cl", "Rose", "Rosy", "Ruan", "Samuel", "Sergio Medeiros Cl", "Sergio kelle Cl", "Sheila Cl", "Silene Cl", "Silvana", "Silvana Cl", "Silvia Do ACAI - CL", "Sivoneide Cl", "Spl Studio", "Sther Cl", "Suelen", "Sueli Cristina 🌸 NOVO", "Suporte PC", "Suzana CL", "Suzany Cl", "Só Com Pagamento Antes -Gabriel", "Tais", "Taisi", "Tamilis Dias Cl", "Tamires Cl", "Tamires Cl da DINIZ OLAVO", "Tania Cl", "Thaise Cl", "Thiago", "Val CL", "Valdemir Cl", "Valdevanio", "Valdir Cl", "Valmy Cl", "Vanessa Cl", "Verônica Cl", "Viih Cl", "Vini Cl", "Viviane", "WELLINGTON PRIMO", "Welinton Cl", "Welinton Novo", "Wesley Cl", "Wesley Rodrigues Alves", "William", "Wivya", "Zeza Cl", "helida Cl", "jairine Cl", "lidiedna Cl", "luceliaalves143", "luidson", "nidinha", "tchê tchê tchê", "welliton Primo ", "wermeson", "Ádla", "ᴀɴɴᴀ ᴄʟᴀʀᴀ Cl Filha Da Lisa", "𝖁𝖎𝖙𝖔𝖗 𝕷𝖎𝖒𝖆⛓️🕷️", "😎"];    
     const el=id=>document.getElementById(id);
     const format=v=>'R$ '+Number(v||0).toFixed(2).replace('.',',');
+    
+    // Nível de alerta para estoque baixo
+    const LIMITE_ALERTA_ESTOQUE = 5;
 
     // Funções de salvamento local (mantidas)
     function salvar(){ 
       localStorage.setItem(KEY_T,JSON.stringify(transacoes)); 
       localStorage.setItem(KEY_F,JSON.stringify(fixos)); 
       localStorage.setItem(KEY_C,JSON.stringify(clientes)); 
+      localStorage.setItem(KEY_E,JSON.stringify(estoque)); // SALVA ESTOQUE
     }
 
     // --- NOVA FUNÇÃO PARA CARREGAR DADOS DO SHEETS (SINCRONIZAÇÃO) ---
@@ -211,7 +246,17 @@
           // ATUALIZA AS VARIÁVEIS GLOBAIS COM OS DADOS DO SHEETS
           transacoes = data.transacoes || [];
           fixos = data.fixos || [];
-          
+          // NOVO: Carrega e mescla o estoque, garantindo que todos os produtos existam
+          const estoqueSheets = data.estoque || {};
+          estoque = {...estoque}; // Mantém a lista de produtos
+          PRODUTOS_ESTOQUE.forEach(p => {
+              // Se o Sheets tem o valor, usa. Caso contrário, mantém o 0 inicial ou o valor local.
+              if (estoqueSheets[p] !== undefined) {
+                  estoque[p] = parseInt(estoqueSheets[p]);
+              }
+          });
+
+
           // Combina clientes da planilha com a lista embutida
           const clientesSheets = data.clientes || [];
           const todosClientes = [...new Set([...nomesEmbutidos, ...clientesSheets])];
@@ -222,6 +267,7 @@
           
           // Renderiza a visualização com os dados sincronizados
           atualizarListaClientes();
+          atualizarListaProdutos(); // NOVO: Atualiza a datalist de produtos
           render();
           console.log("Dados sincronizados com sucesso do Google Sheets.");
         } else {
@@ -238,6 +284,7 @@
         clientes = todos;
 
         atualizarListaClientes();
+        atualizarListaProdutos(); // NOVO: Atualiza a datalist de produtos
         render();
       }
     }
@@ -249,9 +296,59 @@
       dl.innerHTML = clientes.sort().map(c=>`<option value="${c}"></option>`).join('');
     }
 
+    // NOVO: Função para popular a datalist de produtos/descrições
+    function atualizarListaProdutos(){
+        const dl = el('produtosList');
+        // A lista de opções inclui os produtos para seleção rápida na descrição
+        dl.innerHTML = PRODUTOS_ESTOQUE.map(p => `<option value="${p}"></option>`).join('');
+    }
+
+    // NOVO: Função para renderizar o controle de estoque
+    function renderEstoque(){
+        const container = el('controleEstoque');
+        container.innerHTML = PRODUTOS_ESTOQUE.map(p => {
+            const quantidade = estoque[p] !== undefined ? estoque[p] : 0;
+            const classeAlerta = (quantidade <= LIMITE_ALERTA_ESTOQUE) ? 'alerta-baixo-estoque' : '';
+
+            return `
+                <div class="estoque-item">
+                    <label>${p}</label>
+                    <input type="number" id="estoque-${p.replace(/\s/g, '_')}" 
+                           value="${quantidade}" min="0" 
+                           class="estoque-input ${classeAlerta}"
+                           data-produto="${p}">
+                </div>
+            `;
+        }).join('');
+
+        // Adicionar event listeners para salvar automaticamente no objeto 'estoque'
+        document.querySelectorAll('.estoque-input').forEach(input => {
+            input.onchange = (e) => {
+                const produto = e.target.getAttribute('data-produto');
+                // Garante que o valor seja um número inteiro não negativo
+                const novoValor = Math.max(0, parseInt(e.target.value) || 0); 
+                estoque[produto] = novoValor;
+                e.target.value = novoValor; // Atualiza o campo com o valor sanitizado
+                // Atualiza o visual de alerta se necessário
+                e.target.classList.toggle('alerta-baixo-estoque', novoValor <= LIMITE_ALERTA_ESTOQUE);
+            };
+        });
+    }
+
+    // NOVO: Função para salvar o estoque e enviar para o Sheets
+    async function salvarEstoque(){
+        salvar(); // Salva localmente
+        await enviarParaSheet({ estoque: JSON.stringify(estoque) }, 'Estoque');
+        alert('Estoque salvo e enviado para o Google Sheets.');
+    }
+
     function limparTudo(){
-      if(!confirm('Apagar todas as transações, custos fixos e clientes? ATENÇÃO: ISTO SÓ LIMPA A VISUALIZAÇÃO LOCAL, NÃO APAGA OS DADOS DO GOOGLE SHEETS!')) return;
-      transacoes=[]; fixos=[]; clientes=[];
+      if(!confirm('Apagar todas as transações, custos fixos, clientes e ESTOQUE? ATENÇÃO: ISTO SÓ LIMPA A VISUALIZAÇÃO LOCAL, NÃO APAGA OS DADOS DO GOOGLE SHEETS!')) return;
+      transacoes=[]; fixos=[]; clientes=[]; 
+      // Reinicializa o estoque localmente
+      estoque = {};
+      PRODUTOS_ESTOQUE.forEach(p => estoque[p] = 0);
+      
       localStorage.clear();
       render();
       alert('Todos os dados foram apagados LOCALMENTE! Para apagar da planilha, você deve fazê-lo manualmente.');
@@ -282,13 +379,25 @@
     // --- FIM DA FUNÇÃO DE ENVIO ---
 
 
-    // --- FUNÇÕES DE ADIÇÃO (MANTIDAS COM ADIÇÃO DO CHAME DE ENVIO) ---
+    // --- FUNÇÕES DE ADIÇÃO (MANTIDAS COM ADIÇÃO DO CHAME DE ENVIO E LÓGICA DE ESTOQUE) ---
     async function addTrans(){
       const cliente=el('cliente').value.trim(); const resp=el('responsavel').value;
       const data=el('data').value; const cat=el('categoria').value;
       const desc=el('descricao').value; const tipo=el('tipo').value;
       const val=parseFloat(el('valor').value);
       if(!cliente||!data||!val){alert('Preencha todos os campos obrigatórios');return;}
+
+      // NOVO: Lógica de baixa de estoque se for Receita e a descrição for um dos produtos
+      if (tipo === 'receita' && PRODUTOS_ESTOQUE.includes(desc)) {
+          if (estoque[desc] > 0) {
+              estoque[desc]--; // Dá baixa de 1 unidade
+              // Envia a atualização do estoque (apenas o objeto completo)
+              await enviarParaSheet({ estoque: JSON.stringify(estoque) }, 'Estoque');
+              console.log(`Baixa de 1 unidade em estoque: ${desc}`);
+          } else {
+              if(!confirm(`O item "${desc}" está com 0 unidades no estoque local. Deseja adicionar a transação mesmo assim?`)) return;
+          }
+      }
 
       const novaTransacaoSheet = {
         id: Date.now(),
@@ -299,7 +408,9 @@
       // Lógica Local (manter a lista local atualizada)
       transacoes.push(novaTransacaoSheet);
       if(!clientes.includes(cliente)) clientes.push(cliente);
-      salvar(); atualizarListaClientes(); render();
+      salvar(); 
+      atualizarListaClientes(); 
+      render();
       el('cliente').value=''; el('descricao').value=''; el('valor').value='';
     }
 
@@ -365,13 +476,34 @@
       const rc=el('receitasPorCliente');
       rc.innerHTML = Object.keys(mapaClientes).length ? Object.entries(mapaClientes).map(([c,v])=>`<div class="list-item"><div>${c}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
 
+      // --- INÍCIO: ALTERAÇÃO PARA INCLUIR CONTAGEM DE SERVIÇOS ---
       const mapaServ={};
-      transacoes.filter(t=>t.tipo==='receita').forEach(t=>mapaServ[t.cat]=(mapaServ[t.cat]||0)+t.val);
+      const mapaContagemServ = {};
+      
+      transacoes.filter(t=>t.tipo==='receita').forEach(t=>{
+        // Acumula a receita
+        mapaServ[t.cat]=(mapaServ[t.cat]||0)+t.val;
+        // Acumula a contagem de serviços
+        mapaContagemServ[t.cat]=(mapaContagemServ[t.cat]||0)+1;
+      });
+      
       const rs=el('receitasPorServico');
-      rs.innerHTML = Object.keys(mapaServ).length ? Object.entries(mapaServ).map(([s,v])=>`<div class="list-item"><div>${s}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
+      rs.innerHTML = Object.keys(mapaServ).length ? Object.entries(mapaServ).map(([s,v])=>{
+          const contagem = mapaContagemServ[s];
+          return `
+            <div class="list-item">
+                <div>${s} (${contagem}x)</div> 
+                <div class="valor-receita">${format(v)}</div>
+            </div>
+          `;
+      }).join('') : '<div class="empty">Nenhuma receita</div>';
+      // --- FIM: ALTERAÇÃO PARA INCLUIR CONTAGEM DE SERVIÇOS ---
+      
+      // NOVO: Renderiza o controle de estoque
+      renderEstoque();
     }
 
-    // --- FUNÇÃO exportarPDF CORRIGIDA COM QUEBRA DE PÁGINA ---
+    // --- FUNÇÃO exportarPDF CORRIGIDA COM QUEBRA DE PÁGINA (sem alterações substantivas) ---
     async function exportarPDF(){
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
@@ -424,6 +556,9 @@
       
       const rs=document.getElementById('receitasPorServico').innerText.trim().split('\n').filter(l => l.trim().length > 0);
       
+      // NOTE: A função exportarPDF continuará usando o innerText atual do elemento, que agora inclui a contagem. 
+      // O PDF refletirá o formato "Categoria (Contagem x) R$ Valor".
+      
       rs.forEach(l=>{ 
         // Verifica se é necessário quebrar a página antes de desenhar a próxima linha
         if (y + lineHeight > pageHeight - footerMargin) { 
@@ -444,6 +579,7 @@
     el('btnAddFix').onclick=addFixo;
     el('btnLimparTudo').onclick=limparTudo;
     el('btnExport').onclick=exportarPDF;
+    el('btnSalvarEstoque').onclick=salvarEstoque; // NOVO: Evento para salvar estoque
 
     // A chamada de inicialização é substituída pelo novo método de sincronização
     carregarDadosDoSheets();
