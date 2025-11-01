@@ -248,13 +248,15 @@
           fixos = data.fixos || [];
           // NOVO: Carrega e mescla o estoque, garantindo que todos os produtos existam
           const estoqueSheets = data.estoque || {};
-          estoque = {...estoque}; // Mantém a lista de produtos
+          // Usa o objeto 'estoque' local apenas para manter a lista de produtos (se 'estoqueSheets' estiver vazio)
+          let novoEstoque = {...estoque}; 
           PRODUTOS_ESTOQUE.forEach(p => {
-              // Se o Sheets tem o valor, usa. Caso contrário, mantém o 0 inicial ou o valor local.
+              // Se o Sheets tem o valor, usa.
               if (estoqueSheets[p] !== undefined) {
-                  estoque[p] = parseInt(estoqueSheets[p]);
+                  novoEstoque[p] = parseInt(estoqueSheets[p]);
               }
           });
+          estoque = novoEstoque;
 
 
           // Combina clientes da planilha com a lista embutida
@@ -331,14 +333,17 @@
                 e.target.value = novoValor; // Atualiza o campo com o valor sanitizado
                 // Atualiza o visual de alerta se necessário
                 e.target.classList.toggle('alerta-baixo-estoque', novoValor <= LIMITE_ALERTA_ESTOQUE);
+                
+                // *** CORREÇÃO APLICADA AQUI: Salva no localStorage imediatamente para persistir no PC atual. ***
+                salvar();
             };
         });
     }
 
     // NOVO: Função para salvar o estoque e enviar para o Sheets
     async function salvarEstoque(){
-        salvar(); // Salva localmente
-        await enviarParaSheet({ estoque: JSON.stringify(estoque) }, 'Estoque');
+        salvar(); // Salva localmente (necessário para que 'estoque' esteja atualizado no localStorage)
+        await enviarParaSheet({ estoque: JSON.stringify(estoque) }, 'Estoque'); // Envia para o Sheets para sincronizar entre PCs
         alert('Estoque salvo e enviado para o Google Sheets.');
     }
 
@@ -476,7 +481,7 @@
       const rc=el('receitasPorCliente');
       rc.innerHTML = Object.keys(mapaClientes).length ? Object.entries(mapaClientes).map(([c,v])=>`<div class="list-item"><div>${c}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
 
-      // --- INÍCIO: ALTERAÇÃO PARA INCLUIR CONTAGEM DE SERVIÇOS ---
+      // --- ALTERAÇÃO SOLICITADA ANTERIORMENTE: INCLUIR CONTAGEM DE SERVIÇOS ---
       const mapaServ={};
       const mapaContagemServ = {};
       
@@ -497,7 +502,7 @@
             </div>
           `;
       }).join('') : '<div class="empty">Nenhuma receita</div>';
-      // --- FIM: ALTERAÇÃO PARA INCLUIR CONTAGEM DE SERVIÇOS ---
+      // --- FIM DA ALTERAÇÃO ANTERIOR ---
       
       // NOVO: Renderiza o controle de estoque
       renderEstoque();
@@ -556,8 +561,7 @@
       
       const rs=document.getElementById('receitasPorServico').innerText.trim().split('\n').filter(l => l.trim().length > 0);
       
-      // NOTE: A função exportarPDF continuará usando o innerText atual do elemento, que agora inclui a contagem. 
-      // O PDF refletirá o formato "Categoria (Contagem x) R$ Valor".
+      // NOTE: O PDF refletirá o formato "Categoria (Contagem x) R$ Valor".
       
       rs.forEach(l=>{ 
         // Verifica se é necessário quebrar a página antes de desenhar a próxima linha
@@ -579,7 +583,7 @@
     el('btnAddFix').onclick=addFixo;
     el('btnLimparTudo').onclick=limparTudo;
     el('btnExport').onclick=exportarPDF;
-    el('btnSalvarEstoque').onclick=salvarEstoque; // NOVO: Evento para salvar estoque
+    el('btnSalvarEstoque').onclick=salvarEstoque; // Evento para salvar e SINCRONIZAR estoque
 
     // A chamada de inicialização é substituída pelo novo método de sincronização
     carregarDadosDoSheets();
