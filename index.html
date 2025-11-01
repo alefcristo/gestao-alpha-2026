@@ -248,10 +248,9 @@
           fixos = data.fixos || [];
           // NOVO: Carrega e mescla o estoque, garantindo que todos os produtos existam
           const estoqueSheets = data.estoque || {};
-          // Usa o objeto 'estoque' local apenas para manter a lista de produtos (se 'estoqueSheets' estiver vazio)
-          let novoEstoque = {...estoque}; 
+          let novoEstoque = {...estoque}; // Mantém a lista de produtos
           PRODUTOS_ESTOQUE.forEach(p => {
-              // Se o Sheets tem o valor, usa.
+              // Se o Sheets tem o valor, usa. Caso contrário, mantém o 0 inicial ou o valor local.
               if (estoqueSheets[p] !== undefined) {
                   novoEstoque[p] = parseInt(estoqueSheets[p]);
               }
@@ -381,7 +380,7 @@
         alert('Erro de conexão! Não foi possível salvar no Google Sheets. Verifique a URL e a rede.');
       }
     }
-    // --- FIM DA FUNÇÃO DE ENVIO ---
+    // --- FIM DA FUNÇÃO DE ENVIOS ---
 
 
     // --- FUNÇÕES DE ADIÇÃO (MANTIDAS COM ADIÇÃO DO CHAME DE ENVIO E LÓGICA DE ESTOQUE) ---
@@ -396,7 +395,8 @@
       if (tipo === 'receita' && PRODUTOS_ESTOQUE.includes(desc)) {
           if (estoque[desc] > 0) {
               estoque[desc]--; // Dá baixa de 1 unidade
-              // Envia a atualização do estoque (apenas o objeto completo)
+              // Salva a alteração localmente e envia para o Sheets
+              salvar(); 
               await enviarParaSheet({ estoque: JSON.stringify(estoque) }, 'Estoque');
               console.log(`Baixa de 1 unidade em estoque: ${desc}`);
           } else {
@@ -458,7 +458,7 @@
           <tr>
             <td>${t.cliente}</td><td>${t.resp}</td><td>${new Date(t.data).toLocaleDateString('pt-BR')}</td>
             <td>${t.cat}</td>
-            <td>${t.tipo==='receita'?'<span class="valor-receita">Receita</span>':'<span class="valor-despesa">Despesa</span>'}</td>
+            <td>${t.tipo==='receita'?'<span class="valor-receita">Receita</span>':'<span class="valor-despesa">'+format(t.val)+'</span>'}</td>
             <td style="text-align:right">${t.tipo==='receita'?'<span class="valor-receita">'+format(t.val)+'</span>':'<span class="valor-despesa">'+format(t.val)+'</span>'}</td>
             <td><button onclick="removeTrans(${t.id})">X</button></td>
           </tr>`).join('');
@@ -481,7 +481,7 @@
       const rc=el('receitasPorCliente');
       rc.innerHTML = Object.keys(mapaClientes).length ? Object.entries(mapaClientes).map(([c,v])=>`<div class="list-item"><div>${c}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
 
-      // --- ALTERAÇÃO SOLICITADA ANTERIORMENTE: INCLUIR CONTAGEM DE SERVIÇOS ---
+      // --- INÍCIO: ALTERAÇÃO PARA INCLUIR CONTAGEM DE SERVIÇOS ---
       const mapaServ={};
       const mapaContagemServ = {};
       
@@ -502,7 +502,7 @@
             </div>
           `;
       }).join('') : '<div class="empty">Nenhuma receita</div>';
-      // --- FIM DA ALTERAÇÃO ANTERIOR ---
+      // --- FIM: ALTERAÇÃO PARA INCLUIR CONTAGEM DE SERVIÇOS ---
       
       // NOVO: Renderiza o controle de estoque
       renderEstoque();
