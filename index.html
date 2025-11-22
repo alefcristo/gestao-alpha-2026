@@ -36,10 +36,17 @@
     button {
       cursor: pointer; border-radius: 8px; padding: 10px 14px;
       font-weight: 700; border: none;
+      transition: background 0.2s, color 0.2s;
     }
     #btnAdd { background: #000; color: #fff; }
-    #btnLimparTudo { background: #fff; color: #000; }
-    #btnExport { background: #fff; color: #000; }
+    #btnAdd:hover { background: #333; }
+    #btnLimparTudo { background: #fff; color: #000; border: 1px solid #000; }
+    #btnLimparTudo:hover { background: #eee; }
+    #btnExport { background: #fff; color: #000; border: 1px solid #000; }
+    #btnExport:hover { background: #eee; }
+    #btnSalvarEstoque, #btnAddFix { background: #000; color: #fff; width: 100%; }
+    #btnSalvarEstoque:hover, #btnAddFix:hover { background: #333; }
+
 
     .valor-receita { color: var(--receita); font-weight: 800; }
     .valor-despesa { color: var(--despesa); font-weight: 800; }
@@ -48,13 +55,28 @@
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     th, td { padding: 10px; border-bottom: 1px solid #ccc; font-size: 0.9rem; text-align: left; }
+    th { background-color: #f5f5f5; color: #333; }
     .empty { color: #777; text-align: center; padding: 12px; }
 
-    .summary .box { background: #111; padding: 14px; border-radius: 8px; color: #fff; margin-bottom: 10px; }
+    .summary .box { 
+      background: var(--panel); 
+      padding: 14px; 
+      border-radius: 8px; 
+      color: #fff; 
+      margin-bottom: 10px; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
     .summary h4 { margin: 0; font-size: 0.8rem; text-transform: uppercase; color: #ccc; }
     .summary .big { font-size: 1.3rem; margin-top: 5px; }
 
-    .list-item { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px dashed rgba(255,255,255,0.1); }
+    .list-item { 
+      display: flex; 
+      justify-content: space-between; 
+      padding: 6px 0; 
+      border-top: 1px dashed rgba(255,255,255,0.1);
+      font-size: 0.9rem; /* Melhoria de UX */
+    }
+    .list-item:first-child { border-top: none; }
     .list-item div:first-child { color: #fff; font-weight: 600; }
     .list-item div:last-child { font-weight: 700; }
     
@@ -63,6 +85,32 @@
     .estoque-item label { color: #000; font-weight: 600; margin-bottom: 0; }
     .estoque-item input { width: 80px; text-align: right; padding: 6px; }
     .alerta-baixo-estoque { background-color: var(--alerta-estoque); color: #000; font-weight: 700; border: 2px solid #e0b400; }
+
+    /* Estilo para o ranking */
+    .ranking-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.95rem;
+    }
+    .ranking-item:first-child { border-top: none; }
+    .ranking-item .rank-number { 
+        font-weight: 900; 
+        color: var(--receita); 
+        margin-right: 8px; 
+        display: inline-block;
+        width: 20px;
+        text-align: center;
+    }
+    .ranking-item .client-name {
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
 
     footer { background: #000; padding: 10px; text-align: center; color: #888; font-size: 0.85rem; border-top: 1px solid var(--border); }
   </style>
@@ -142,9 +190,9 @@
           <h3>Histórico de Transações</h3>
           <table>
             <thead>
-              <tr><th>Cliente</th><th>Resp.</th><th>Data</th><th>Categoria</th><th>Tipo</th><th style="text-align:right">Valor</th><th></th></tr>
+              <tr><th>Cliente</th><th>Resp.</th><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th style="text-align:right">Valor</th><th></th></tr>
             </thead>
-            <tbody id="tabelaTransacoes"><tr><td colspan="7" class="empty">Nenhuma transação</td></tr></tbody>
+            <tbody id="tabelaTransacoes"><tr><td colspan="8" class="empty">Nenhuma transação</td></tr></tbody>
           </table>
         </section>
       </div>
@@ -165,6 +213,11 @@
         <div class="box">
           <h4>Saldo Líquido</h4>
           <div id="saldoLiquido" class="big">R$ 0,00</div>
+        </div>
+
+        <div class="box">
+            <h4>Top 10 Clientes (Ranking de Receita)</h4>
+            <div id="rankingClientes"></div>
         </div>
 
         <div class="box">
@@ -461,13 +514,14 @@
 
     function render(){
       const tbody=el('tabelaTransacoes');
-      if(!transacoes.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma transação</td></tr>';}
+      // Colunas: Cliente, Resp., Data, Descrição, Categoria, Tipo, Valor, X
+      if(!transacoes.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhuma transação</td></tr>';}
       else{
         tbody.innerHTML=transacoes.map(t=>`
           <tr>
             <td>${t.cliente}</td><td>${t.resp}</td><td>${new Date(t.data).toLocaleDateString('pt-BR')}</td>
-            <td>${t.cat}</td>
-            <td>${t.tipo==='receita'?'<span class="valor-receita">Receita</span>':'<span class="valor-despesa">'+format(t.val)+'</span>'}</td>
+            <td>${t.desc}</td> <td>${t.cat}</td>
+            <td>${t.tipo==='receita'?'<span class="valor-receita">Receita</span>':'<span class="valor-despesa">Despesa</span>'}</td>
             <td style="text-align:right">${t.tipo==='receita'?'<span class="valor-receita">'+format(t.val)+'</span>':'<span class="valor-despesa">'+format(t.val)+'</span>'}</td>
             <td><button onclick="removeTrans(${t.id})">X</button></td>
           </tr>`).join('');
@@ -485,8 +539,28 @@
       el('saldoLiquido').textContent=format(saldo);
       el('saldoLiquido').className=saldo>=0?'big saldo-pos':'big saldo-neg';
 
+      // --- INÍCIO: Lógica do Ranking de Top 10 Clientes ---
       const mapaClientes={};
       transacoes.filter(t=>t.tipo==='receita').forEach(t=>mapaClientes[t.cliente]=(mapaClientes[t.cliente]||0)+t.val);
+      
+      const rankingClientes = Object.entries(mapaClientes)
+        .sort(([, a], [, b]) => b - a) // Ordena por valor (decrescente)
+        .slice(0, 10); // Pega os 10 primeiros
+        
+      const rankingEl = el('rankingClientes');
+      if (rankingClientes.length) {
+          rankingEl.innerHTML = rankingClientes.map(([cliente, valor], index) => `
+              <div class="ranking-item">
+                  <div class="rank-number">${index + 1}º</div>
+                  <div class="client-name">${cliente}</div>
+                  <div class="valor-receita">${format(valor)}</div>
+              </div>
+          `).join('');
+      } else {
+          rankingEl.innerHTML = '<div class="empty">Nenhuma receita</div>';
+      }
+      // --- FIM: Lógica do Ranking de Top 10 Clientes ---
+
       const rc=el('receitasPorCliente');
       rc.innerHTML = Object.keys(mapaClientes).length ? Object.entries(mapaClientes).map(([c,v])=>`<div class="list-item"><div>${c}</div><div class="valor-receita">${format(v)}</div></div>`).join('') : '<div class="empty">Nenhuma receita</div>';
 
@@ -517,7 +591,7 @@
       renderEstoque();
     }
 
-    // --- FUNÇÃO exportarPDF (MANTIDA) ---
+    // --- FUNÇÃO exportarPDF (MANTIDA, mas ajustada para o novo ranking) ---
     async function exportarPDF(){
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
@@ -538,6 +612,23 @@
       doc.text(`Custos Fixos: ${totalF}`,14,y+=8);
       doc.text(`Saldo Líquido: ${saldo}`,14,y+=10);
 
+      y+=10; 
+      if (y + 8 + lineHeight > pageHeight - footerMargin) { doc.addPage(); y = margin; } 
+      
+      // --- NOVO: Top 10 Clientes no PDF ---
+      doc.text('Top 10 Clientes (Ranking de Receita):',14,y+=8);
+      const ranking=document.getElementById('rankingClientes').innerText.trim().split('\n').filter(l => l.trim().length > 0); 
+      ranking.forEach(l=>{ 
+        if (y + lineHeight > pageHeight - footerMargin) { 
+          doc.addPage();
+          y = margin;
+          doc.setFontSize(12); 
+          doc.text('Top 10 Clientes (continuação):', 14, y); 
+          y += 8; 
+        }
+        doc.text(l,14,y+=lineHeight); 
+      });
+      
       y+=10; 
       if (y + 8 + lineHeight > pageHeight - footerMargin) { doc.addPage(); y = margin; } 
       
