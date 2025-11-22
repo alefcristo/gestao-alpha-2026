@@ -219,9 +219,15 @@
 
     .tab-content { padding:0; }
 
-    .tab-pane { display:none; opacity:0; transform:translateY(6px); transition: opacity .24s ease, transform .24s ease; }
-    /* JS applies inline style "display: block" -> usamos seletor baseado em style */
-    .tab-pane[style*="display: block"] { display:block; opacity:1; transform:none; }
+    /* DEFAULT: keep all tab-panes hidden; we'll force #registro visible immediately */
+    .tab-pane {
+      display: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .24s ease, transform .24s ease;
+    }
+    /* Ensure registro is visible by default even before JS runs */
+    #registro { display: block !important; opacity: 1 !important; transform: none !important; }
 
     /* mobile tabs */
     .tab-menu-mobile { display:none; justify-content:space-around; background:#1f1f1f; padding:10px 8px; margin-bottom:14px; border-radius:10px; }
@@ -264,7 +270,7 @@
 
       <div class="tab-content">
         
-        <div id="registro" class="tab-pane" style="display:block;">
+        <div id="registro" class="tab-pane">
             <section class="card">
               <h3>Registrar Transação</h3>
               <label>Cliente</label>
@@ -414,32 +420,28 @@
     const nomesEmbutidos = ["ADEILSON CL", "ANDRE Cl - Ferro Velho", "CICERO X-EXPRESSO","Absolute.perfumaria", "Adeilma", "Ademir", "Admirador", "Adri Cl", "Adriano Cl", "Adriel", "Adriele Cl", "Adriely OMENA CL", "Agapito CL", "Ageu Cl Pai De Aninha", "Agnaldo Cl", "Aldeni Cl", "Alessandro CL", "Alex Cl", "Aliane", "Aliane Barros Cl", "Aline", "Aloizio Cl", "Amelia CL", "Ana Cl", "Ana Paula Cl", "Andre Cl", "Andressa CL", "Andreza Lima Cl", "André Lima Cl", "Andréia Cl", "Ane", "Anny", "Antônio Cl", "Ari Da Prestação", "Arnaldo Cl", "Barbearia SFCLUB", "Barbearia STYLUS", "Beto e Bethe 🐟e🦂❤️😍", "Bianca Cl", "Brisanet - DANIEL", "Bruna", "CARLOS CL", "CARLOS JOSE CL", "CONFEITEIRA LILY", "Carla Cl", "Carlos Lima Cl", "Cassiel Cl", "Cauany Cl", "Chaveiro", "Chaveiro 2", "Cicera Prima De Pai", "Cicinha Cl", "Cida Cl", "Cileide", "Cilene Cl", "Cintia Cl", "Cl", "Cl A", "Cl B", "Cl Nova", "Cl Sem Nome", "Cladeilton Cl", "Cleciane Cl", "Cleide Cl", "Cleo Deus E Fiel", "Confeiteira Mylena BTN 3", "Confeiteira Raiane", "Creusa", "Cristiane Cl", "Cássio Cl", "Cícero Cl", "Cícero Crispim Cl", "Daiane", "Daniel", "Daniela CL", "Dayenne Stella", "Deivid Cl", "Denize", "Deubania", "Diogenes", "Duda Cl", "EDILENE Cl", "EDMILSON - LEVE ME ACESSORIOS", "EDSON CL", "EMILY CL", "EVELIN CL", "Edileide Cl", "Edilma Cl Esposa De Fabricio", "Edilson Cl", "Edjan Cl", "Edjania Barbosa", "Edna Cl", "Ednalva Cl", "Ednalvo", "Eduarda Cl", "Elaine CL", "Elayne", "Eliane Cl", "Elias", "Elias Pereira Cl", "Elielsa Cl", "Elierveson Cl", "Elânia Cl", "Emanuel", "Emanuela Cl", "Emerson Cl", "Eric", "Erick Cl", "Erika Cl", "Erivaldo Cl", "Esaposa de Welinton Primo", "Esequias Cl", "Everaldo Cl", "Everton", "Ezequiel Cl", "FABIO", "Fabiana Cl", "Fabiane CL", "Fabiuane", "Felipe Cl", "Fernanda Lisboa", "Fernando Cl", "Fernando Landim Cl", "Filtros da Ilha 🏝️", "Francisco Cl", "Fábio Cl", "Gabriel Cl", "Gean Cl", "Geovan Cl", "Gerônimo Cl", "Gil Cl - Esposo LIVIA", "Girleide Cl", "Gislaine Pires Cl", "Graziela Cl", "Graziely", "Grazy Cl", "Guilherme Cl", "Gustavo", "Gustavo CL", "Helena", "Henrique Cl", "Hercules Cl", "Igor Cl", "Iracema", "Irailda CL", "Iraldo", "Irene", "Irma CILEIDE CL", "Isa Cl", "Ivete", "Ivonice CL", "JARDA", "Jaciete Cl", "Jadlog PA - Transportadora", "Jadna CL", "Jadson", "Jailma Cl", "Jailson CL", "Jailson Santos Cl", "Jaime Cl Faturas VIVO", "Jalison", "Jamilke", "Jana Personalizados", "Janaina Cl", "Janiele Cl", "Jaqueline Cl", "Jeane", "Jeane Cl - EMPORIO DAS PLANTAS", "Jefferson Cl", "Jeine", "Jennyfer Cl", "Jessica Teixeira Cl", "Jessika CL", "Jhonny Cl", "Jirleide Cl", "Joao", "Jose", "Jose De Assis Cl", "Joselma Sales Cl", "Josenilton Cl", "Josiane Cl", "Josineide CL", "Josy ❤️", "José", "José Cl", "João", "João Batista CL", "João Brito Cl", "João Cl", "João Suzart Junior", "Julia - Cl", "Julio CL", "Junior", "Jurandir", "Juscelia Silva Cl", "Juvenildo Cl", "Juzinou", "Jéssica", "Jéssica Cl Funcionaria MT SOLAR", "Jéssica Confeiteira", "Júlia Matos Cl", "Karolayne Silva Souza Cl", "Kelle Cl", "Kátia", "LEYDE CL", "LUCINHA CHAGAS CL", "Larissa", "Larissa Cl", "Larissa Gomes Cl", "Laudice Cl", "Lay Cl", "Layon Cl", "Leandro", "Leda", "Leeh", "Leno Esposo De VANIA CL", "Lenon Brito Cl", "Leonardo Cl", "Leyde", "Lia Cl", "Lindoercio Cl", "Lisa VictóriaCL", "Lourdes", "Lourdes Cl", "Luana", "Lucas Cl", "Lucia Cl", "Lucilene Cl", "Lucrécia Cl", "Lucy Cl", "Luis Cl", "Lume Jóias", "Lunna Cl", "Lurdes", "Luzia Cl", "MARCIA CL", "MATEUS Cl", "Manoel Cl - Esposo Aires", "Manoel Do SERASA CL", "Marcela Brunely Cl", "Marcio UBER - INDRIVE", "Marco", "Marcondes CL", "Marcos Cl", "Maria", "Maria CL parente De Pai", "Maria Cl", "Maria De Fátima CL", "Maria José Cl", "Maria Sioneide Cl", "Mariane", "Marielly", "Marineide", "Mary", "Mary Omena Cl", "Matheus Cl", "Mayko Cl", "Mercia Cl", "Meure Cl", "Micael omena Cl", "Milena Confeiteira Btn 2", "Milly Cl", "Moises", "Márcio CL", "NILSON SANTOS", "Nanda", "Natalia Brito CL", "Neide Cl", "Neide Limah🥰😘😍", "Nildo Cl", "Nilson Cl", "Nordeste Variedades", "Nubia CONFEITEIRA", "Olinda Cl", "Patricia CL", "Patrícia CL", "Paulo Cesar Cl", "Pedro Souza Cl", "Priscila Cl", "Queliane Cl", "Quintal Limpo", "Raissa Cl", "Raniel Cl", "Raquel Cl", "Ravena Cl", "Ray Cl Filha De Cileide", "Rayane Cl", "Raíld Cl", "Renato RN Acessórios", "Ricardo Barbosa", "Ricardo Cl", "Ricardo Pereira Cl", "Richard Cl", "Rita de Cassia - CL", "Roniel CL", "Rosalina Cl", "Rosane Cl", "Rose", "Rosy", "Ruan", "Samuel", "Sergio Medeiros Cl", "Sergio kelle Cl", "Sheila Cl", "Silene Cl", "Silvana", "Silvana Cl", "Silvia Do ACAI - CL", "Sivoneide Cl", "Spl Studio", "Sther Cl", "Suelen", "Sueli Cristina 🌸 NOVO", "Suporte PC", "Suzana CL", "Suzany Cl", "Só Com Pagamento Antes -Gabriel", "Tais", "Taisi", "Tamilis Dias Cl", "Tamires Cl", "Tamires Cl da DINIZ OLAVO", "Tania Cl", "Thaise Cl", "Thiago", "Val CL", "Valdemir Cl", "Valdevanio", "Valdir Cl", "Valmy Cl", "Vanessa Cl", "Verônica Cl", "Viih Cl", "Vini Cl", "Viviane", "WELLINGTON PRIMO", "Welinton Cl", "Welinton Novo", "Wesley Cl", "Wesley Rodrigues Alves", "William", "Wivya", "Zeza Cl", "helida Cl", "jairine Cl", "lidiedna Cl", "luceliaalves143", "luidson", "nidinha", "tchê tchê tchê", "welliton Primo ", "wermeson", "Ádla", "ᴀɴɴᴀ ᴄʟᴀʀᴀ Cl Filha Da Lisa", "𝖁𝖎𝖙𝖔𝖗 𝕷𝖎𝖒𝖆⛓️🕷️", "😎"];    
     const el=id=>document.getElementById(id);
     const format=v=>'R$ '+Number(v||0).toFixed(2).replace('.',',');
-    
+
     const LIMITE_ALERTA_ESTOQUE = 5;
 
     // --- FUNÇÕES DE NAVEGAÇÃO POR ABAS (MANTIDA) ---
     function setupTabs(){
         const tabButtons = document.querySelectorAll('.tab-button');
-        
-        // Garante que a aba 'registro' esteja visível por padrão
+
+        // ensure all panes hidden, register will be shown by CSS #registro rule
         document.querySelectorAll('.tab-pane').forEach(pane => {
-            if (pane.id !== 'registro') {
-                pane.style.display = 'none';
-            } else {
-                pane.style.display = 'block';
-            }
+            pane.style.display = 'none';
         });
-        
+
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const tabId = button.getAttribute('data-tab');
-                
+
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.tab-pane').forEach(pane => pane.style.display = 'none');
 
-                // marca todos os botões que apontam para essa tab como ativos (mobile + desktop)
+                // mark all buttons that point to this tab as active (desktop + mobile)
                 document.querySelectorAll(`[data-tab="${tabId}"]`).forEach(btn => btn.classList.add('active'));
-                
+
                 const activePane = el(tabId);
                 if (activePane) {
                     activePane.style.display = 'block';
@@ -800,7 +802,6 @@
     }
     // --- FIM DA FUNÇÃO exportarPDF (CORRIGIDA) ---
 
-
     // --- INICIALIZAÇÃO ---
     el('btnAdd').onclick=addTrans;
     el('btnAddFix').onclick=addFixo;
@@ -812,11 +813,18 @@
     carregarDadosDoSheets();
 
     // Garante que, ao iniciar a página, a aba 'registro' esteja marcada como ativa
-    document.addEventListener('DOMContentLoaded', ()=> {
-      document.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('[data-tab="registro"]').forEach(b=>b.classList.add('active'));
-      document.querySelectorAll('.tab-pane').forEach(p=>p.style.display = (p.id === 'registro' ? 'block' : 'none'));
-    });
+    // Use window.onload para garantir que a renderização final já foi aplicada pelo navegador
+    window.onload = () => {
+      // hide all panes first (CSS already keeps them hidden except #registro)
+      document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+      // force registro visible
+      const reg = document.getElementById('registro');
+      if (reg) reg.style.display = 'block';
+
+      // set active state on all buttons that reference registro (desktop + mobile)
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('[data-tab="registro"]').forEach(b => b.classList.add('active'));
+    };
   </script>
 </body>
 </html>
