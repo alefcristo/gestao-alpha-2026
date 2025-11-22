@@ -6,16 +6,15 @@
   <title>GESTÃO ALPHA 2026 - CONTROLE FINANCEIRO</title>
   <style>
     :root {
-      /* Palette e tokens */
       --bg-dark: #0f0f10;
       --panel-bg: #121212;
-      --card-bg: #fafafa; /* card menos branco, mais premium */
+      --card-bg: #fafafa;
       --text-dark: #1a1a1a;
       --text-light: #f5f5f5;
-      --primary: #157A4D; /* alinhado com branding Quintal Limpo (premium) */
-      --success: #2ECC71; /* cor de receitas (ajustada para o anexo) */
-      --danger: #FF6B6B;  /* cor de despesas (ajustada para o anexo) */
-      --fixos-color: #FFFFFF; /* custos fixos em branco como no anexo */
+      --primary: #157A4D;
+      --success: #2ECC71;
+      --danger: #FF6B6B;
+      --fixos-color: #FFFFFF;
       --muted: #9aa0a6;
       --border-color: rgba(255, 255, 255, 0.06);
       --glass: rgba(255,255,255,0.02);
@@ -37,10 +36,9 @@
       padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,0.03);
       display:flex; align-items:center; gap:18px;
     }
-    /* Centraliza o título e aumenta a fonte conforme pedido */
     header h1 {
-      margin: 0 auto; /* centraliza */
-      font-size: 1.6rem; /* um pouco maior */
+      margin: 0 auto;
+      font-size: 1.6rem;
       color: var(--primary);
       letter-spacing:0.2px;
       font-weight:800;
@@ -48,7 +46,6 @@
     }
     header .subtitle { color:var(--muted); font-size:0.9rem; margin-left:auto; font-weight:600; display:none; }
 
-    /* Layout principal */
     .main-grid {
         display: grid;
         grid-template-columns: 220px 1fr 320px;
@@ -66,7 +63,6 @@
         .summary-panel { order: -1; }
     }
 
-    /* Cards */
     .card {
         background: var(--card-bg);
         color: var(--text-dark);
@@ -86,9 +82,7 @@
         font-weight: 800;
         letter-spacing: -0.2px;
     }
-    .card .section {
-      margin-bottom: 16px;
-    }
+    .card .section { margin-bottom: 16px; }
 
     .metric-grid {
         display: grid;
@@ -97,7 +91,6 @@
     }
     @media (max-width: 600px) { .metric-grid { grid-template-columns: 1fr; } }
 
-    /* Form */
     label { display: block; font-size: 0.85rem; color: #6b7280; margin-bottom: 6px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; }
     input, select, datalist {
         width: 100%; padding: 12px 14px;
@@ -121,7 +114,6 @@
 
     .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:6px; justify-content:flex-start; }
 
-    /* Buttons */
     button {
       cursor: pointer; border-radius: 12px; padding: 12px 18px;
       font-weight: 800; border: none;
@@ -146,20 +138,17 @@
 
     #btnSalvarEstoque, #btnAddFix { background: linear-gradient(180deg, var(--primary), color-mix(in srgb, var(--primary) 75%, black 12%)); color:white; width:100%; margin-top:12px; }
 
-    /* Valores (ajustados para o anexo) */
     .valor-receita { color: var(--success); font-weight: 900; }
     .valor-despesa { color: var(--danger); font-weight: 900; }
     .saldo-pos { color: var(--success); font-weight: 900; }
     .saldo-neg { color: var(--danger); font-weight: 900; }
     .summary-value { font-size: 1.9rem; margin-top: 6px; font-weight:900; color: var(--success); }
 
-    /* Ajuste específico do painel lateral: cores conforme anexo */
     .summary-panel .valor-receita { color: var(--success) !important; }
     .summary-panel .valor-despesa { color: var(--danger) !important; }
     .summary-panel .fixos { color: var(--fixos-color) !important; }
     .summary-panel .saldo-pos { color: var(--success) !important; }
 
-    /* Tabela */
     table { width: 100%; border-collapse: collapse; margin-top: 12px; background: transparent; }
     th, td {
         padding: 12px 10px;
@@ -175,7 +164,6 @@
 
     td button { padding:6px 10px; font-size:0.8rem; min-width:auto; background: var(--danger); color:white; border-radius:8px; }
 
-    /* Aside / Summary */
     .summary-panel { padding: 0; display:flex; flex-direction:column; gap:14px; position:relative; }
     .summary-panel .box {
         background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
@@ -187,20 +175,17 @@
 
     .summary-panel .list-item { display:flex; justify-content:space-between; padding:8px 0; border-top:1px dashed rgba(255,255,255,0.03); font-size:0.9rem; color: #e9eef0; }
 
-    /* Estoque e listagens */
     .estoque-item { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:6px 0; border-bottom:1px dotted #e6e6e6; }
     .estoque-item label { color: var(--text-dark); font-weight:700; margin-bottom:0; }
     .estoque-item input { width:100px; text-align:right; padding:8px; margin-bottom:0; }
 
     .alerta-baixo-estoque { background-color: #fff6e6 !important; border: 2px solid #e6b800 !important; }
 
-    /* Ranking */
     .ranking-item { display:flex; align-items:center; gap:12px; padding:8px 0; border-top:1px solid rgba(0,0,0,0.03); }
     .rank-number { font-weight:900; color:var(--primary); width:36px; text-align:center; font-size:0.95rem; }
     .client-name { flex-grow:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-dark); font-weight:700; }
     .ranking-item .valor-receita { font-weight:800; }
 
-    /* Tabs lateral */
     .sidebar-tabs { background: transparent; padding: 8px; display:flex; flex-direction:column; gap:10px; }
     .tab-button {
         display:block; width:100%; padding:12px 14px; margin-bottom:0; background: #171717; color: var(--text-light);
@@ -226,21 +211,26 @@
       transform: translateY(6px);
       transition: opacity .24s ease, transform .24s ease;
     }
+
     /* Ensure registro is visible by default even before JS runs */
     #registro { display: block !important; opacity: 1 !important; transform: none !important; }
 
-    /* mobile tabs */
+    /* IMPORTANT: show any tab-pane that has inline "display: block" set by JS */
+    .tab-pane[style*="display: block"] {
+      display: block;
+      opacity: 1;
+      transform: none;
+    }
+
     .tab-menu-mobile { display:none; justify-content:space-around; background:#1f1f1f; padding:10px 8px; margin-bottom:14px; border-radius:10px; }
     .tab-menu-mobile .tab-button { padding:8px 10px; border-radius:8px; font-size:0.95rem; min-width:unset; }
 
     footer { background: #0b0b0b; padding:10px; text-align:center; color:#9aa0a6; font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.03); border-radius:0 0 12px 12px; }
 
-    /* Small helpers */
     .small-muted { font-size:0.85rem; color:var(--muted); }
     .center { text-align:center; }
     .mb-6 { margin-bottom: 6px; }
 
-    /* accessibility focus visible */
     :focus { outline: 3px solid rgba(21,122,77,0.12); outline-offset: 2px; }
 
   </style>
@@ -372,7 +362,7 @@
         </div>
         <div class="box">
           <h4>Total de Despesas</h4>
-          <div id="totalDespesas" class="big summary-value valor-despesa">R$ 0,00</div>
+          <div id='totalDespesas' class="big summary-value valor-despesa">R$ 0,00</div>
         </div>
         <div class="box">
           <h4>Custos Fixos</h4>
@@ -396,7 +386,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.18/jspdf.plugin.autotable.min.js"></script>
   <script>
-    // --- INÍCIO: CONFIGURAÇÃO DE SINCRONIZAÇÃO COM GOOGLE SHEETS ---
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxhhZrbBx0ZKaXZZn_SgoTRXcy5HVqi0Teh2oEE0DLZSOZFeJqeFvA1cHIw1TiG_bV_/exec'; 
     const KEY_T='gestao_trans'; const KEY_F='gestao_fixos'; const KEY_C='gestao_clientes'; 
     const KEY_E='gestao_estoque'; 
@@ -417,13 +406,12 @@
     });
     estoque = estoqueInicializado; 
     
-    const nomesEmbutidos = ["ADEILSON CL", "ANDRE Cl - Ferro Velho", "CICERO X-EXPRESSO","Absolute.perfumaria", "Adeilma", "Ademir", "Admirador", "Adri Cl", "Adriano Cl", "Adriel", "Adriele Cl", "Adriely OMENA CL", "Agapito CL", "Ageu Cl Pai De Aninha", "Agnaldo Cl", "Aldeni Cl", "Alessandro CL", "Alex Cl", "Aliane", "Aliane Barros Cl", "Aline", "Aloizio Cl", "Amelia CL", "Ana Cl", "Ana Paula Cl", "Andre Cl", "Andressa CL", "Andreza Lima Cl", "André Lima Cl", "Andréia Cl", "Ane", "Anny", "Antônio Cl", "Ari Da Prestação", "Arnaldo Cl", "Barbearia SFCLUB", "Barbearia STYLUS", "Beto e Bethe 🐟e🦂❤️😍", "Bianca Cl", "Brisanet - DANIEL", "Bruna", "CARLOS CL", "CARLOS JOSE CL", "CONFEITEIRA LILY", "Carla Cl", "Carlos Lima Cl", "Cassiel Cl", "Cauany Cl", "Chaveiro", "Chaveiro 2", "Cicera Prima De Pai", "Cicinha Cl", "Cida Cl", "Cileide", "Cilene Cl", "Cintia Cl", "Cl", "Cl A", "Cl B", "Cl Nova", "Cl Sem Nome", "Cladeilton Cl", "Cleciane Cl", "Cleide Cl", "Cleo Deus E Fiel", "Confeiteira Mylena BTN 3", "Confeiteira Raiane", "Creusa", "Cristiane Cl", "Cássio Cl", "Cícero Cl", "Cícero Crispim Cl", "Daiane", "Daniel", "Daniela CL", "Dayenne Stella", "Deivid Cl", "Denize", "Deubania", "Diogenes", "Duda Cl", "EDILENE Cl", "EDMILSON - LEVE ME ACESSORIOS", "EDSON CL", "EMILY CL", "EVELIN CL", "Edileide Cl", "Edilma Cl Esposa De Fabricio", "Edilson Cl", "Edjan Cl", "Edjania Barbosa", "Edna Cl", "Ednalva Cl", "Ednalvo", "Eduarda Cl", "Elaine CL", "Elayne", "Eliane Cl", "Elias", "Elias Pereira Cl", "Elielsa Cl", "Elierveson Cl", "Elânia Cl", "Emanuel", "Emanuela Cl", "Emerson Cl", "Eric", "Erick Cl", "Erika Cl", "Erivaldo Cl", "Esaposa de Welinton Primo", "Esequias Cl", "Everaldo Cl", "Everton", "Ezequiel Cl", "FABIO", "Fabiana Cl", "Fabiane CL", "Fabiuane", "Felipe Cl", "Fernanda Lisboa", "Fernando Cl", "Fernando Landim Cl", "Filtros da Ilha 🏝️", "Francisco Cl", "Fábio Cl", "Gabriel Cl", "Gean Cl", "Geovan Cl", "Gerônimo Cl", "Gil Cl - Esposo LIVIA", "Girleide Cl", "Gislaine Pires Cl", "Graziela Cl", "Graziely", "Grazy Cl", "Guilherme Cl", "Gustavo", "Gustavo CL", "Helena", "Henrique Cl", "Hercules Cl", "Igor Cl", "Iracema", "Irailda CL", "Iraldo", "Irene", "Irma CILEIDE CL", "Isa Cl", "Ivete", "Ivonice CL", "JARDA", "Jaciete Cl", "Jadlog PA - Transportadora", "Jadna CL", "Jadson", "Jailma Cl", "Jailson CL", "Jailson Santos Cl", "Jaime Cl Faturas VIVO", "Jalison", "Jamilke", "Jana Personalizados", "Janaina Cl", "Janiele Cl", "Jaqueline Cl", "Jeane", "Jeane Cl - EMPORIO DAS PLANTAS", "Jefferson Cl", "Jeine", "Jennyfer Cl", "Jessica Teixeira Cl", "Jessika CL", "Jhonny Cl", "Jirleide Cl", "Joao", "Jose", "Jose De Assis Cl", "Joselma Sales Cl", "Josenilton Cl", "Josiane Cl", "Josineide CL", "Josy ❤️", "José", "José Cl", "João", "João Batista CL", "João Brito Cl", "João Cl", "João Suzart Junior", "Julia - Cl", "Julio CL", "Junior", "Jurandir", "Juscelia Silva Cl", "Juvenildo Cl", "Juzinou", "Jéssica", "Jéssica Cl Funcionaria MT SOLAR", "Jéssica Confeiteira", "Júlia Matos Cl", "Karolayne Silva Souza Cl", "Kelle Cl", "Kátia", "LEYDE CL", "LUCINHA CHAGAS CL", "Larissa", "Larissa Cl", "Larissa Gomes Cl", "Laudice Cl", "Lay Cl", "Layon Cl", "Leandro", "Leda", "Leeh", "Leno Esposo De VANIA CL", "Lenon Brito Cl", "Leonardo Cl", "Leyde", "Lia Cl", "Lindoercio Cl", "Lisa VictóriaCL", "Lourdes", "Lourdes Cl", "Luana", "Lucas Cl", "Lucia Cl", "Lucilene Cl", "Lucrécia Cl", "Lucy Cl", "Luis Cl", "Lume Jóias", "Lunna Cl", "Lurdes", "Luzia Cl", "MARCIA CL", "MATEUS Cl", "Manoel Cl - Esposo Aires", "Manoel Do SERASA CL", "Marcela Brunely Cl", "Marcio UBER - INDRIVE", "Marco", "Marcondes CL", "Marcos Cl", "Maria", "Maria CL parente De Pai", "Maria Cl", "Maria De Fátima CL", "Maria José Cl", "Maria Sioneide Cl", "Mariane", "Marielly", "Marineide", "Mary", "Mary Omena Cl", "Matheus Cl", "Mayko Cl", "Mercia Cl", "Meure Cl", "Micael omena Cl", "Milena Confeiteira Btn 2", "Milly Cl", "Moises", "Márcio CL", "NILSON SANTOS", "Nanda", "Natalia Brito CL", "Neide Cl", "Neide Limah🥰😘😍", "Nildo Cl", "Nilson Cl", "Nordeste Variedades", "Nubia CONFEITEIRA", "Olinda Cl", "Patricia CL", "Patrícia CL", "Paulo Cesar Cl", "Pedro Souza Cl", "Priscila Cl", "Queliane Cl", "Quintal Limpo", "Raissa Cl", "Raniel Cl", "Raquel Cl", "Ravena Cl", "Ray Cl Filha De Cileide", "Rayane Cl", "Raíld Cl", "Renato RN Acessórios", "Ricardo Barbosa", "Ricardo Cl", "Ricardo Pereira Cl", "Richard Cl", "Rita de Cassia - CL", "Roniel CL", "Rosalina Cl", "Rosane Cl", "Rose", "Rosy", "Ruan", "Samuel", "Sergio Medeiros Cl", "Sergio kelle Cl", "Sheila Cl", "Silene Cl", "Silvana", "Silvana Cl", "Silvia Do ACAI - CL", "Sivoneide Cl", "Spl Studio", "Sther Cl", "Suelen", "Sueli Cristina 🌸 NOVO", "Suporte PC", "Suzana CL", "Suzany Cl", "Só Com Pagamento Antes -Gabriel", "Tais", "Taisi", "Tamilis Dias Cl", "Tamires Cl", "Tamires Cl da DINIZ OLAVO", "Tania Cl", "Thaise Cl", "Thiago", "Val CL", "Valdemir Cl", "Valdevanio", "Valdir Cl", "Valmy Cl", "Vanessa Cl", "Verônica Cl", "Viih Cl", "Vini Cl", "Viviane", "WELLINGTON PRIMO", "Welinton Cl", "Welinton Novo", "Wesley Cl", "Wesley Rodrigues Alves", "William", "Wivya", "Zeza Cl", "helida Cl", "jairine Cl", "lidiedna Cl", "luceliaalves143", "luidson", "nidinha", "tchê tchê tchê", "welliton Primo ", "wermeson", "Ádla", "ᴀɴɴᴀ ᴄʟᴀʀᴀ Cl Filha Da Lisa", "𝖁𝖎𝖙𝖔𝖗 𝕷𝖎𝖒𝖆⛓️🕷️", "😎"];    
+    const nomesEmbutidos = ["ADEILSON CL", "ANDRE Cl - Ferro Velho", "CICERO X-EXPRESSO","Absolute.perfumaria", "Adeilma", "Ademir", "Admirador", "Adri Cl", "Adriano Cl", "Adriel", "Adriele Cl", "Adriely OMENA CL", "Agapito CL", "Ageu Cl Pai De Aninha", "Agnaldo Cl", "Aldeni Cl", "Alessandro CL", "Alex Cl", "Aliane", "Aliane Barros Cl", "Aline", "Aloizio Cl", "Amelia CL", "Ana Cl", "Ana Paula Cl", "Andre Cl", "Andressa CL", "Andreza Lima Cl", "André Lima Cl", "Andréia Cl", "Ane", "Anny", "Antônio Cl", "Ari Da Prestação", "Arnaldo Cl", "Barbearia SFCLUB", "Barbearia STYLUS", "Beto e Bethe 🐟e🦂❤️😍", "Bianca Cl", "Brisanet - DANIEL", "Bruna", "CARLOS CL", "CARLOS JOSE CL", "CONFEITEIRA LILY", "Carla Cl", "Carlos Lima Cl", "Cassiel Cl", "Cauany Cl", "Chaveiro", "Chaveiro 2", "Cicera Prima De Pai", "Cicinha Cl", "Cida Cl", "Cileide", "Cilene Cl", "Cintia Cl", "Cl", "Cl A", "Cl B", "Cl Nova", "Cl Sem Nome", "Cladeilton Cl", "Cleciane Cl", "Cleide Cl", "Cleo Deus E Fiel", "Confeiteira Mylena BTN 3", "Confeiteira Raiane", "Creusa", "Cristiane Cl", "Cássio Cl", "Cícero Cl", "Cícero Crispim Cl", "Daiane", "Daniel", "Daniela CL", "Dayenne Stella", "Deivid Cl", "Denize", "Deubania", "Diogenes", "Duda Cl", "EDILENE Cl", "EDMILSON - LEVE ME ACESSORIOS", "EDSON CL", "EMILY CL", "EVELIN CL", "Edileide Cl", "Edilma Cl Esposa De Fabricio", "Edilson Cl", "Edjan Cl", "Edjania Barbosa", "Edna Cl", "Ednalva Cl", "Ednalvo", "Eduarda Cl", "Elaine CL", "Elayne", "Eliane Cl", "Elias", "Elias Pereira Cl", "Elielsa Cl", "Elierveson Cl", "Elânia Cl", "Emanuel", "Emanuela Cl", "Emerson Cl", "Eric", "Erick Cl", "Erika Cl", "Erivaldo Cl", "Esaposa de Welinton Primo", "Esequias Cl", "Everaldo Cl", "Everton", "Ezequiel Cl", "FABIO", "Fabiana Cl", "Fabiane CL", "Fabiuane", "Felipe Cl", "Fernanda Lisboa", "Fernando Cl", "Fernando Landim Cl", "Filtros da Ilha 🏝️", "Francisco Cl", "Fábio Cl", "Gabriel Cl", "Gean Cl", "Geovan Cl", "Gerônimo Cl", "Gil Cl - Esposo LIVIA", "Girleide Cl", "Gislaine Pires Cl", "Graziela Cl", "Graziely", "Grazy Cl", "Guilherme Cl", "Gustavo", "Gustavo CL", "Helena", "Henrique Cl", "Hercules Cl", "Igor Cl", "Iracema", "Irailda CL", "Iraldo", "Irene", "Irma CILEIDE CL", "Isa Cl", "Ivete", "Ivonice CL", "JARDA", "Jaciete Cl", "Jadlog PA - Transportadora", "Jadna CL", "Jadson", "Jailma Cl", "Jailson CL", "Jailson Santos Cl", "Jaime Cl Faturas VIVO", "Jalison", "Jamilke", "Jana Personalizados", "Janaina Cl", "Janiele Cl", "Jaqueline Cl", "Jeane", "Jeane Cl - EMPORIO DAS PLANTAS", "Jefferson Cl", "Jeine", "Jennyfer Cl", "Jessica Teixeira Cl", "Jessika CL", "Jhonny Cl", "Jirleide Cl", "Joao", "Jose", "Jose De Assis Cl", "Joselma Sales Cl", "Josenilton Cl", "Josiane Cl", "Josineide CL", "Josy ❤️", "José", "José Cl", "João", "João Batista CL", "João Brito Cl", "João Cl", "João Suzart Junior", "Julia - Cl", "Julio CL", "Junior", "Jurandir", "Juscelia Silva Cl", "Juvenildo Cl", "Juzinou", "Jéssica", "Jéssica Cl Funcionaria MT SOLAR", "Jéssica Confeiteira", "Júlia Matos Cl", "Karolayne Silva Souza Cl", "Kelle Cl", "Kátia", "LEYDE CL", "LUCINHA CHAGAS CL", "Larissa", "Larissa Cl", "Larissa Gomes Cl", "Laudice Cl", "Lay Cl", "Layon Cl", "Leandro", "Leda", "Leeh", "Leno Esposo De VANIA CL", "Lenon Brito Cl", "Leonardo Cl", "Leyde", "Lia Cl", "Lindoercio Cl", "Lisa VictóriaCL", "Lourdes", "Lourdes Cl", "Luana", "Lucas Cl", "Lucia Cl", "Lucilene Cl", "Lucrécia Cl", "Lucy Cl", "Luis Cl", "Lume Jóias", "Lunna Cl", "Lurdes", "Luzia Cl", "MARCIA CL", "MATEUS Cl", "Manoel Cl - Esposo Aires", "Manoel Do SERASA CL", "Marcela Brunely Cl", "Marcio UBER - INDRIVE", "Marco", "Marcondes CL", "Marcos Cl", "Maria", "Maria CL parente De Pai", "Maria Cl", "Maria De Fátima CL", "Maria José Cl", "Maria Sioneide Cl", "Mariane", "Marielly", "Marineide", "Mary", "Mary Omena Cl", "Matheus Cl", "Mayko Cl", "Mercia Cl", "Meure Cl", "Micael omena Cl", "Milena Confeiteira Btn 2", "Milly Cl", "Moises", "Márcio CL", "NILSON SANTOS", "Nanda", "Natalia Brito CL", "Neide Cl", "Neide Limah🥰😘😍", "Nildo Cl", "Nilson Cl", "Nordeste Variedades", "Nubia CONFEITEIRA", "Olinda Cl", "Patricia CL", "Patrícia CL", "Paulo Cesar Cl", "Pedro Souza Cl", "Priscila Cl", "Queliane Cl", "Quintal Limpo", "Raissa Cl", "Raniel Cl", "Raquel Cl", "Ravena Cl", "Ray Cl Filha De Cileide", "Rayane Cl", "Raíld Cl", "Renato RN Acessórios", "Ricardo Barbosa", "Ricardo Cl", "Ricardo Pereira Cl", "Richard Cl", "Rita de Cassia - CL", "Roniel CL", "Rosalina Cl", "Rosane Cl", "Rose", "Rosy", "Ruan", "Samuel", "Sergio Medeiros Cl", "Sergio kelle Cl", "Sheila Cl", "Silene Cl", "Silvana", "Silvana Cl", "Silvia Do ACAI - CL", "Sivoneide Cl", "Spl Studio", "Sther Cl", "Suelen", "Sueli Cristina 🌸 NOVO", "Suporte PC", "Suzana CL", "Suzany Cl", "Só Com Pagamento Antes -Gabriel", "Tais", "Taisi", "Tamilis Dias Cl", "Tamires Cl", "Tamires Cl da DINIZ OLAVO", "Tania Cl", "Thaise Cl", "Thiago", "Val CL", "Valdemir Cl", "Valdevanio", "Valdir Cl", "Valmy Cl", "Vanessa Cl", "Verônica Cl", "Viih Cl", "Vini Cl", "Viviane", "WELLINGTON PRIMO", "Welinton Cl", "Welinton Novo", "Wesley Cl", "Wesley Rodrigues Alves", "William", "Wivya", "Zeza Cl", "helida Cl", "jairine Cl", "lidiedna Cl", "luceliaalves143", "luidson", "nidinha", "tchê tchê tchê", "welliton Primo ", "wermeson", "Ádla", "ᴀɴɴᴀ ᴄʟᴀʀᴀ Cl Filha Da Lisa", "𝖁𝖎𝖙𝖔𝖗 𝕷𝖎𝖒𝖆⛓️🕷️", "😎"];
     const el=id=>document.getElementById(id);
     const format=v=>'R$ '+Number(v||0).toFixed(2).replace('.',',');
 
     const LIMITE_ALERTA_ESTOQUE = 5;
 
-    // --- FUNÇÕES DE NAVEGAÇÃO POR ABAS (MANTIDA) ---
     function setupTabs(){
         const tabButtons = document.querySelectorAll('.tab-button');
 
@@ -439,7 +427,6 @@
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.tab-pane').forEach(pane => pane.style.display = 'none');
 
-                // mark all buttons that point to this tab as active (desktop + mobile)
                 document.querySelectorAll(`[data-tab="${tabId}"]`).forEach(btn => btn.classList.add('active'));
 
                 const activePane = el(tabId);
@@ -450,7 +437,6 @@
         });
     }
 
-    // --- FUNÇÕES DE SINCRONIZAÇÃO E CRUD (MANTIDAS) ---
     function salvar(){ 
       localStorage.setItem(KEY_T,JSON.stringify(transacoes)); 
       localStorage.setItem(KEY_F,JSON.stringify(fixos)); 
@@ -651,7 +637,6 @@
       el('totalFixos').textContent=format(totalF);
       el('saldoLiquido').textContent=format(saldo);
 
-      // Ajusta classes/cores do painel lateral conforme valor e conforme anexo
       el('totalReceitas').className = 'big summary-value valor-receita';
       el('totalDespesas').className = 'big summary-value valor-despesa';
       el('totalFixos').className = 'big summary-value fixos';
@@ -702,11 +687,9 @@
       renderEstoque();
     }
 
-    // --- FUNÇÃO exportarPDF (CORRIGIDA PARA INCLUIR TABELA DE TRANSAÇÕES) ---
     async function exportarPDF(){
-      // Usa o plugin autotable para gerar a tabela de transações
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4'); // 'p'ortrait, 'mm' units, 'a4' size
+      const doc = new jsPDF('p', 'mm', 'a4');
       let y = 20; 
       const margin = 14; 
       const lineHeight = 7; 
@@ -714,7 +697,6 @@
       
       doc.setFontSize(16); doc.text('Resumo Financeiro - GESTÃO ALPHA 2026', margin, y); y+=12;
       
-      // 1. TOTAIS E SALDO
       const totalR=el('totalReceitas').textContent, totalD=el('totalDespesas').textContent, totalF=el('totalFixos').textContent, saldo=el('saldoLiquido').textContent;
       
       doc.setFontSize(12);
@@ -723,14 +705,11 @@
       doc.text(`Custos Fixos: ${totalF}`, margin, y+=8);
       doc.text(`Saldo Líquido: ${saldo}`, margin, y+=10);
 
-      // 2. RESUMOS POR CLASSIFICAÇÃO (Top 10, Serviços, Clientes)
       y+=10;
       doc.setFontSize(14); doc.text('Resumos Detalhados:', margin, y+=8);
       doc.setFontSize(12);
       
-      y+=5; // Espaço antes do primeiro resumo
-      
-      // Top 10 Clientes
+      y+=5;
       doc.text('Top 10 Clientes (Ranking de Receita):', margin, y+=8);
       const ranking=document.getElementById('rankingClientes').innerText.trim().split('\n').filter(l => l.trim().length > 0); 
       ranking.forEach(l=>{ 
@@ -739,8 +718,6 @@
       });
       
       y+=5; 
-      
-      // Receitas por Serviço
       doc.text('Receitas por Serviço:', margin, y+=8);
       const rs=document.getElementById('receitasPorServico').innerText.trim().split('\n').filter(l => l.trim().length > 0);
       rs.forEach(l=>{ 
@@ -749,8 +726,6 @@
       });
 
       y+=5; 
-
-      // Receitas por Cliente (Todos)
       doc.text('Receitas por Cliente (Todos):', margin, y+=8);
       const rc=document.getElementById('receitasPorCliente').innerText.trim().split('\n').filter(l => l.trim().length > 0); 
       rc.forEach(l=>{ 
@@ -758,8 +733,6 @@
         doc.text(l, margin, y+=lineHeight); 
       });
 
-
-      // 3. HISTÓRICO DE TRANSAÇÕES COMPLETO (Usando jspdf-autotable)
       doc.addPage(); 
       y = margin;
       doc.setFontSize(14); doc.text('Histórico Completo de Transações', margin, y+=8);
@@ -788,21 +761,14 @@
           cellPadding: 2,
           halign: 'left',
         },
-        columnStyles: {
-            6: { halign: 'right' } // Alinha o Valor à direita
-        },
-        headStyles: {
-            fillColor: [66, 66, 66], // Cor escura para o cabeçalho
-            textColor: [255, 255, 255]
-        },
+        columnStyles: { 6: { halign: 'right' } },
+        headStyles: { fillColor: [66, 66, 66], textColor: [255, 255, 255] },
         margin: { left: margin, right: margin }
       });
 
       doc.save('Resumo_Gestao_Alpha_2026.pdf');
     }
-    // --- FIM DA FUNÇÃO exportarPDF (CORRIGIDA) ---
 
-    // --- INICIALIZAÇÃO ---
     el('btnAdd').onclick=addTrans;
     el('btnAddFix').onclick=addFixo;
     el('btnLimparTudo').onclick=limparTudo;
@@ -812,16 +778,11 @@
     setupTabs();
     carregarDadosDoSheets();
 
-    // Garante que, ao iniciar a página, a aba 'registro' esteja marcada como ativa
-    // Use window.onload para garantir que a renderização final já foi aplicada pelo navegador
     window.onload = () => {
-      // hide all panes first (CSS already keeps them hidden except #registro)
       document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
-      // force registro visible
       const reg = document.getElementById('registro');
       if (reg) reg.style.display = 'block';
 
-      // set active state on all buttons that reference registro (desktop + mobile)
       document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('[data-tab="registro"]').forEach(b => b.classList.add('active'));
     };
